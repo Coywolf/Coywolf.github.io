@@ -1,7 +1,19 @@
 <!DOCTYPE html>
 <html>
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="Games/Minesweeper/minesweeper.css"/>
+</head>	
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+	<div>
+		<canvas id="minesweeper-canvas" class="minesweeper" width="800" height="480"></canvas>
+		<div class="control-panel">
+			<span id="minecount" class="minecount"></span>
+			<span id="endgame" class="endgame"></span>
+			<button id="newgame" class="newgame">New Game</button>
+		</div>
+	</div>
+	
+	<script src="Games/Minesweeper/minesweeper.js"></script>
 </body>
 </html>
