@@ -152,7 +152,7 @@ strong.metric {
 	border-style: solid;
 }
 
-.block.missed {
+.missed {
 	background-color: rgba(167,26,66, .5)
 }
 
