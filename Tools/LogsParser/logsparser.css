@@ -1,0 +1,152 @@
+body {
+    background-color: #272f2c;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.key-input {
+	width: 100%;
+	text-align: center;
+	color: #d9b08c;
+}
+
+.key-input input{
+	width: 300px;
+	padding:15px 0px 15px 8px;
+	border-radius:5px;
+	box-shadow:inset 4px 6px 10px -4px rgba(0,0,0,0.3), 0 1px 1px -1px rgba(255,255,255,0.3);
+	background:rgba(0,0,0,0.2);
+	border:1px solid rgba(0,0,0,1);
+	margin-bottom:10px;
+	color:#6E6E6E;
+	text-shadow:#000 0px 1px 5px;
+	outline:none;
+  	border:none;
+}
+
+.key-input input:focus{
+	box-shadow:inset 4px 6px 10px -4px rgba(0,0,0,0.7), 0 1px 1px -1px rgba(255,255,255,0.3);
+	background:rgba(0,0,0,0.3);
+	outline:none;
+  	border:none;
+}
+
+.help {
+	width: 100%;
+	text-align: center;
+}
+
+.help>div {
+	background-color: #2c3531;
+	margin: 10px;
+	padding: 10px;
+	width: 50%;
+	color: #d9b08c;
+	text-align: center;
+	display: inline-block;
+}
+
+.help p {
+	margin: 5px;
+}
+
+.empty {
+	width: 64px;
+	height: 64px;
+	grid-row: 1;
+}
+
+.boss-icon {
+	width: 64px;
+	height: 64px;
+	grid-row: 1;
+	border-style: solid;
+	border-width: 4px;
+	border-radius: 5px;
+	box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    position: relative;
+}
+
+.boss-icon img {
+	width: 100%;
+	height: 100%;	
+}
+
+.boss-icon span {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background-color: black;
+    color: white;
+    min-width: 13px;
+    text-align: center;
+}
+
+.wipe {
+	border-color: red;
+}
+
+.kill {
+	border-color: green;
+}
+
+strong.metric {
+	padding-left:4px;
+	padding-right:4px;
+	color: black;
+}
+
+.metric.flask {
+	background-color: #11ABC1;
+}
+
+.metric.food {
+	background-color: #F5B935;
+}
+
+.metric.combatpot {
+	background-color: #DF3062;
+}
+
+.metric.prepot {
+	background-color: #4BAC3F;
+}
+
+
+
+.container {
+	background-color: #2c3531;
+	display: grid;
+	grid-template-columns: auto;
+	grid-auto-columns: 64px;
+	grid-auto-rows: 64px;
+	grid-gap: 4px;
+	overflow-x: auto;
+	padding: 8px;
+}
+
+.block{
+	width: 64px;
+	height: 64px;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	align-items: end;
+	border-width: 1px;
+	border-color: black;
+	border-style: solid;
+}
+
+.nameblock{
+	height: 64px;
+	grid-row: 1;
+	white-space: nowrap;
+	display: grid;
+	align-content: center;
+	font-family: verdana;
+	font-size: large;
+	padding-right: 8px;
+	color: #d9b08c;
+}

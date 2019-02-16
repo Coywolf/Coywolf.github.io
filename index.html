@@ -12,18 +12,50 @@
 	</script>
 
 	<meta charset="UTF-8">
-	<link rel="stylesheet" type="text/css" href="Games/Minesweeper/minesweeper.css"/>
+	<link rel="stylesheet" type="text/css" href="Tools/LogsParser/logsparser.css"/>
 </head>	
 <body>
-	<div>
-		<canvas id="minesweeper-canvas" class="minesweeper" width="800" height="480"></canvas>
-		<div class="control-panel">
-			<span id="minecount" class="minecount"></span>
-			<span id="endgame" class="endgame"></span>
-			<button id="newgame" class="newgame">New Game</button>
+	<div class="key-input">
+		<input data-bind="value: reportKey" placeholder="Report Link/Key" />
+	</div>
+	<div class="help">
+		<div>
+			<p>
+				Enter a report link/key to load. Each column corresponds to a boss and will include all attempts on the boss. The colored bars represent the attempts for the boss for which the player had each aura:
+			</p>
+			<p> 
+				<strong class="metric flask">Flask</strong>, <strong class="metric food">Food</strong>, and <strong class="metric prepot">Pre Pots</strong> are based on if the player had the aura for the start of the attempt.
+			</p>
+			<p>
+				<strong class="metric combatpot">Combat Pots</strong> are if the player used a combat potion any point during a fight EXCEPT the start.
+			</p>
 		</div>
 	</div>
+	<div style="display: none" class="container" data-bind="with: report, visible: report()">
+		<div class="empty"></div>
 
-	<script src="Games/Minesweeper/minesweeper.js"></script>
+		<!-- ko foreach: bosses -->
+		<div class="boss-icon" data-bind="css: killClass">
+			<img data-bind="attr: {src: bossIconUrl, title: name}" />
+			<span data-bind="text: fights.length"></span>
+		</div>
+		<!-- /ko -->
+
+		<!-- ko foreach: sortedPlayers -->
+			<div class="nameblock" data-bind="text: name, style: {'grid-row': $index() + 2}"></div>
+			
+			<!-- ko foreach: fights -->
+			<div class="block" data-bind="style: {'grid-row': $parentContext.$index() + 2}">
+				<div class="metric flask" data-bind="style: {height: flaskPercent() + '%'}"></div>
+				<div class="metric food" data-bind="style: {height: foodPercent() + '%'}"></div>
+				<div class="metric prepot" data-bind="style: {height: prePotPercent() + '%'}"></div>
+				<div class="metric combatpot" data-bind="style: {height: combatPotPercent() + '%'}"></div>				
+			</div>
+			<!-- /ko -->
+		<!-- /ko -->
+	</div>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"></script>
+	<script src="Tools/LogsParser/logsparser.js"></script>
 </body>
 </html>
