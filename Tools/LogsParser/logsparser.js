@@ -138,8 +138,8 @@
 					return f.type != "NPC";
 				}).forEach(f => {
 					// set up an array for each player that corresponds to the boss list
-					f.fights = Object.keys(groupedBossFights).map(b => {
-						return new playerFightModel(b, groupedBossFights[b]); 
+					f.fights = self.bosses().map(b => {
+						return new playerFightModel(b.boss, b.fights); 
 					});
 
 					// gather the buffs for each player
