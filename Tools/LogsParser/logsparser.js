@@ -28,23 +28,45 @@
 		return acc + Math.max(Math.min(cur.endTime, fight.end_time) - Math.max(cur.startTime, fight.start_time), 0);
 	}
 
-	function playerFightModel(boss, fights){
+	function playerFightModel(boss, friendly){
 		var self = this;
 
 		self.boss = boss;
-		self.fights = fights;
+		self.friendly = friendly;
+		self.fights = boss.fights;
+		self.personalFights = ko.observableArray([]);
+		self.presentAttempts = ko.pureComputed(function(){
+			return self.personalFights().filter(f => {return !f.wasMissing()});
+		})
 
-		self.flaskPercent = ko.observable();
-		self.foodPercent = ko.observable();
-		self.combatPotPercent = ko.observable();
-		self.prePotPercent = ko.observable();
+		self.flaskPercent = ko.pureComputed(function() {
+			return self.personalFights().reduce((acc, cur) => {return cur.hasFlask() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
+		});
+		self.foodPercent = ko.pureComputed(function() {
+			return self.personalFights().reduce((acc, cur) => {return cur.hasFood() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
+		});
+		self.combatPotPercent = ko.pureComputed(function() {
+			return self.personalFights().reduce((acc, cur) => {return cur.hasCombatPot() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
+		});
+		self.prePotPercent = ko.pureComputed(function() {
+			return self.personalFights().reduce((acc, cur) => {return cur.hasPrePot() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
+		});
+		self.missedEncounter = ko.pureComputed(function(){
+			return self.presentAttempts() == 0;
+		});
 
 		self.computePercents = function(auras){
 			// todo use the auras and the fight data to compute the aura percents
-			var fightCount=0,flaskCount=0,foodCount=0,combatPotCount=0,prePotCount=0;
-			for(var f = 0; f < self.fights.length; f++){
-				var fight = self.fights[f];
-				fightCount++;
+			for(var f = 0; f < self.fights().length; f++){
+				var fight = self.fights()[f];
+				var personalFight = {
+					hasFlask: ko.observable(false),
+					hasFood: ko.observable(false),
+					hasCombatPot: ko.observable(false),
+					hasPrePot: ko.observable(false),
+					wasMissing: ko.observable(!self.friendly.fights.find(i => {return i.id == fight.id}))
+				}
+				self.personalFights.push(personalFight);
 
 				for(var a = 0; a < auras.length; a++){
 					var aura = auras[a];
@@ -56,28 +78,47 @@
 						if((fight.start_time + 1000) >= potion.startTime && fight.start_time <= potion.endTime){
 							// aura covers the start of the fight, so increment the appropriate counter
 							if(isFlask(aura.name)){
-								flaskCount++;
+								personalFight.hasFlask(true);
 							}
 							else if(isFood(aura.name)){
-								foodCount++;
+								personalFight.hasFood(true);
 							}
 							else{
-								prePotCount++;
+								personalFight.hasPrePot(true);
 							}
 						}
 						else if(isPotion(aura.name) && potion.endTime >= fight.start_time && potion.startTime <= fight.end_time){
 							// it's a potion, it's not a prepot, but still overlaps the fight, so this is a combat potion
-							combatPotCount++;
+							personalFight.hasCombatPot(true);
 						}
 					}					
 				}
 			};
-
-			self.flaskPercent(flaskCount / fightCount * 100);
-			self.foodPercent(foodCount / fightCount * 100);
-			self.combatPotPercent(combatPotCount / fightCount * 100);
-			self.prePotPercent(prePotCount / fightCount * 100);
 		}
+	}
+
+	function bossModel(groupedFights){
+		var self = this;
+
+		self.boss = groupedFights[0].boss;
+		self.name = groupedFights[0].name;
+		self.fights = ko.observableArray(groupedFights.sort((a,b) => {
+			return a.start_time - b.start_time;
+		}));
+		self.bossIconUrl = 'https://dmszsuqyoe6y6.cloudfront.net/img/warcraft/bosses/' + self.boss +'-icon.jpg';
+		self.killClass = groupedFights.reduce((acc, cur) => {return acc || cur.kill}, false) ? 'kill' : 'wipe';
+
+		self.canExpand = self.fights().length > 1;
+		self.expanded = ko.observable(false);
+		self.toggleExpand = function(){
+			if(self.canExpand){
+				self.expanded(!self.expanded());
+			}
+		}
+
+		self.bossPercentage = ko.pureComputed(function(){
+			return self.fights()[self.fights().length-1].bossPercentage;
+		})
 	}
 
 	function reportModel(reportKey){
@@ -112,15 +153,9 @@
 				});
 				var groupedBossFights = groupBy(bossFights, 'boss');
 				self.bosses(Object.keys(groupedBossFights).map(b => {
-					return {
-						boss: b,
-						name: groupedBossFights[b][0].name,
-						fights: groupedBossFights[b],
-						bossIconUrl: 'https://dmszsuqyoe6y6.cloudfront.net/img/warcraft/bosses/' + b +'-icon.jpg',
-						killClass: groupedBossFights[b].reduce((acc, cur) => {return acc || cur.kill}, false) ? 'kill' : 'wipe'
-					}
+					return new bossModel(groupedBossFights[b]);
 				}).sort((a,b) => {
-					return a.fights[0].start_time - b.fights[0].start_time;
+					return a.fights()[0].start_time - b.fights()[0].start_time;
 				}));
 
 				// find the earliest start and latest end of the fights. this is used for the auras call
@@ -138,15 +173,15 @@
 					return f.type != "NPC";
 				}).forEach(f => {
 					// set up an array for each player that corresponds to the boss list
-					f.fights = self.bosses().map(b => {
-						return new playerFightModel(b.boss, b.fights); 
+					f.fightModels = self.bosses().map(b => {
+						return new playerFightModel(b, f); 
 					});
 
 					// gather the buffs for each player
 					var buffs = apiCall(eventsUrl + '&start=' + start + '&end=' + end + '&targetid=' + f.id).then(buffData => {
 						return buffData.auras.filter(auraFilter);
 					}).then(auras => {
-						f.fights.forEach(pFight => {
+						f.fightModels.forEach(pFight => {
 							pFight.computePercents(auras);
 						})
 					}).finally(()=>{
