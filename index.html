@@ -35,7 +35,12 @@
 		</div>
 	</div>
 	<div style="display: none" class="container" data-bind="with: report, visible: report()">
-		<div class="empty"></div>
+		<div class="controls">
+			<button class="button small blue" data-bind="toggleClick: $root.showFlask, css: {active: $root.showFlask}">Flask</button>
+			<button class="button small yellow" data-bind="toggleClick: $root.showFood, css: {active: $root.showFood}">Food</button>
+			<button class="button small green" data-bind="toggleClick: $root.showPrePot, css: {active: $root.showPrePot}">Pr. Pot</button>
+			<button class="button small red" data-bind="toggleClick: $root.showCombatPot, css: {active: $root.showCombatPot}">Co. Pot</button>
+		</div>
 
 		<!-- ko foreach: bosses -->
 			<!-- ko if: expanded -->
@@ -64,20 +69,36 @@
 				<!-- ko if: boss.expanded -->
 				<!-- ko foreach: personalFights -->
 				<div class="block" data-bind="style: {'grid-row': $parentContext.$parentContext.$index() + 2}, css: {missed: wasMissing}">
+					<!-- ko if: $root.showFlask -->
 					<div class="metric flask" data-bind="style: {height: hasFlask() ? '100%' : '0%'}"></div>
+					<!-- /ko -->
+					<!-- ko if: $root.showFood -->
 					<div class="metric food" data-bind="style: {height: hasFood() ? '100%' : '0%'}"></div>
+					<!-- /ko -->
+					<!-- ko if: $root.showPrePot -->
 					<div class="metric prepot" data-bind="style: {height: hasPrePot() ? '100%' : '0%'}"></div>
-					<div class="metric combatpot" data-bind="style: {height: hasCombatPot() ? '100%' : '0%'}"></div>				
+					<!-- /ko -->
+					<!-- ko if: $root.showCombatPot -->
+					<div class="metric combatpot" data-bind="style: {height: hasCombatPot() ? '100%' : '0%'}"></div>		
+					<!-- /ko -->		
 				</div>
 				<!-- /ko -->
 				<!-- /ko -->
 
 				<!-- ko ifnot: boss.expanded -->			
 				<div class="block" data-bind="style: {'grid-row': $parentContext.$index() + 2}, css: {missed: missedEncounter}">
+					<!-- ko if: $root.showFlask -->
 					<div class="metric flask" data-bind="style: {height: flaskPercent() + '%'}"></div>
+					<!-- /ko -->
+					<!-- ko if: $root.showFood -->
 					<div class="metric food" data-bind="style: {height: foodPercent() + '%'}"></div>
+					<!-- /ko -->
+					<!-- ko if: $root.showPrePot -->
 					<div class="metric prepot" data-bind="style: {height: prePotPercent() + '%'}"></div>
+					<!-- /ko -->
+					<!-- ko if: $root.showCombatPot -->
 					<div class="metric combatpot" data-bind="style: {height: combatPotPercent() + '%'}"></div>				
+					<!-- /ko -->
 				</div>
 				<!-- /ko -->
 

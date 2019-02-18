@@ -1,3 +1,13 @@
+ko.bindingHandlers.toggleClick = {
+    init: function (element, valueAccessor) {
+        var value = valueAccessor();
+
+        ko.utils.registerEventHandler(element, "click", function () {
+            value(!value());
+        });
+    }
+};
+
 (function() {
 	function isFlask(auraName){
 		return auraName == "Flask of the Currents" || auraName == "Flask of Endless Fathoms" || auraName == "Flask of the Vast Horizon" || auraName == "Flask of the Undertow";
@@ -124,7 +134,7 @@
 	function reportModel(reportKey){
 		var self = this;
 
-		self.players = ko.observableArray();	
+		self.players = ko.observableArray();
 		self.bosses = ko.observableArray();
 
 		self.sortedPlayers = ko.pureComputed(function(){
@@ -218,6 +228,10 @@
 		});
 
 		self.report = ko.observable();
+		self.showFlask = ko.observable(true);
+		self.showFood = ko.observable(true);
+		self.showPrePot = ko.observable(true);
+		self.showCombatPot = ko.observable(true);
 
 		function loadReport(key){
 			window.location.hash = key;
