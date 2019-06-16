@@ -10,7 +10,10 @@ ko.bindingHandlers.toggleClick = {
 
 (function() {
 	function isFlask(auraName){
-		return auraName == "Flask of the Currents" || auraName == "Flask of Endless Fathoms" || auraName == "Flask of the Vast Horizon" || auraName == "Flask of the Undertow";
+		return auraName == "Flask of the Currents" || auraName == "Flask of Endless Fathoms" || auraName == "Flask of the Vast Horizon" || auraName == "Flask of the Undertow"
+			// new 8.2 flasks
+			|| auraName == "Greater Flask of the Currents" || auraName == "Greater Flask of Endless Fathoms" || auraName == "Greater Flask of the Vast Horizon" || auraName == "Greater Flask of the Undertow";
+		;
 	}
 
 	function isFood(auraName){
@@ -20,7 +23,14 @@ ko.bindingHandlers.toggleClick = {
 	function isPotion(auraName){
 		return auraName == "Battle Potion of Intellect" || auraName == "Battle Potion of Agility" || auraName == "Battle Potion of Strength" || 
 			auraName == "Battle Potion of Stamina" || auraName == "Potion of Bursting Blood" || auraName == "Steelskin Potion" || 
-			auraName == "Potion of Rising Death" || auraName == "Potion of Replenishment" || auraName == "Sapphire of Brilliance";
+			auraName == "Potion of Rising Death" || auraName == "Potion of Replenishment" || auraName == "Sapphire of Brilliance"
+			// new weird potions in 8.2
+			|| auraName == "Potion of Unbridled Fury" || auraName == "Potion of Wild Mending" || auraName == "Potion of Empowered Proximity" || auraName == "Potion of Focused Resolve"
+			//upgraded potions in 8.2
+			|| auraName == "Superior Battle Potion of Intellect" || auraName == "Superior Battle Potion of Agility" || auraName == "Superior Battle Potion of Strength" 
+			|| auraName == "Superior Battle Potion of Stamina" || auraName == "Superior Steelskin Potion"
+		;
+		
 	}
 
 	function auraFilter(aura){
