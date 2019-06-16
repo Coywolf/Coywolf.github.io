@@ -30,11 +30,14 @@ ko.bindingHandlers.toggleClick = {
 			|| auraName == "Superior Battle Potion of Intellect" || auraName == "Superior Battle Potion of Agility" || auraName == "Superior Battle Potion of Strength" 
 			|| auraName == "Superior Battle Potion of Stamina" || auraName == "Superior Steelskin Potion"
 		;
-		
+	}
+	
+	function isBattleRune(auraName){
+		return auraName == "Battle-Scarred Augmentation";
 	}
 
 	function auraFilter(aura){
-		return isFlask(aura.name) || isFood(aura.name) || isPotion(aura.name);
+		return isFlask(aura.name) || isFood(aura.name) || isPotion(aura.name) || isBattleRune(aura.name);
 	}
 
 	var groupBy = function(xs, key) {
@@ -71,6 +74,9 @@ ko.bindingHandlers.toggleClick = {
 		self.prePotPercent = ko.pureComputed(function() {
 			return self.personalFights().reduce((acc, cur) => {return cur.hasPrePot() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
 		});
+		self.battleRunePercent = ko.pureComputed(function() {
+			return self.personalFights().reduce((acc, cur) => {return cur.hasBattleRune() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
+		});
 		self.missedEncounter = ko.pureComputed(function(){
 			return self.presentAttempts() == 0;
 		});
@@ -84,7 +90,8 @@ ko.bindingHandlers.toggleClick = {
 					hasFood: ko.observable(false),
 					hasCombatPot: ko.observable(false),
 					hasPrePot: ko.observable(false),
-					wasMissing: ko.observable(!self.friendly.fights.find(i => {return i.id == fight.id}))
+					wasMissing: ko.observable(!self.friendly.fights.find(i => {return i.id == fight.id})),
+					hasBattleRune: ko.observable(false)
 				}
 				self.personalFights.push(personalFight);
 
@@ -100,10 +107,14 @@ ko.bindingHandlers.toggleClick = {
 							if(isFlask(aura.name)){
 								personalFight.hasFlask(true);
 							}
+							else if (isBattleRune(aura.name))
+							{
+								personalFight.hasBattleRune(true);
+							}
 							else if(isFood(aura.name)){
 								personalFight.hasFood(true);
 							}
-							else{
+							else if(isPotion(aura.name)){
 								personalFight.hasPrePot(true);
 							}
 						}
@@ -242,6 +253,7 @@ ko.bindingHandlers.toggleClick = {
 		self.showFood = ko.observable(true);
 		self.showPrePot = ko.observable(true);
 		self.showCombatPot = ko.observable(true);
+		self.showBattleRune = ko.observable(false);
 
 		function loadReport(key){
 			window.location.hash = key;

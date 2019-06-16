@@ -130,6 +130,10 @@ strong.metric {
 	background-color: #4BAC3F;
 }
 
+.metric.battlerune {
+	background-color: #D3D3D3;
+}
+
 
 
 .container {
@@ -329,6 +333,21 @@ strong.metric {
 
 .button.green:active,.button.green.active{
   background: #4BAC3F;
+}
+
+/* */
+
+.button.grey{
+  background-color: #808080;
+  border-color: #808080;
+}
+
+.button.grey:hover{
+  background-color: #DCDCDC;
+}
+
+.button.grey:active,.button.grey.active{
+  background: #D3D3D3;
 }
 
 /* */
