@@ -55,7 +55,7 @@ body {
 	height: 64px;
 	grid-row: 1;
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: 1fr 1fr 1fr;
 	grid-template-rows: 1fr 1fr;
 	padding: 2px;
 }
@@ -128,6 +128,10 @@ strong.metric {
 
 .metric.prepot {
 	background-color: #4BAC3F;
+}
+
+.metric.battlerune {
+	background-color: #D3D3D3;
 }
 
 
@@ -329,6 +333,21 @@ strong.metric {
 
 .button.green:active,.button.green.active{
   background: #4BAC3F;
+}
+
+/* */
+
+.button.grey{
+  background-color: #808080;
+  border-color: #808080;
+}
+
+.button.grey:hover{
+  background-color: #DCDCDC;
+}
+
+.button.grey:active,.button.grey.active{
+  background: #D3D3D3;
 }
 
 /* */

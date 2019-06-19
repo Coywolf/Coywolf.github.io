@@ -24,11 +24,13 @@
 				Enter a report link/key to load. Each column corresponds to a boss and will include all attempts on the boss. By default, the colored bars represent the percentage of attempts for the boss for which the player had each aura. Click an encounter with multiple attempts to expand it, and the bars become a yes or no.
 			</p>
 			<p> 
-				<strong class="metric flask">Flask</strong>, <strong class="metric food">Food</strong>, and <strong class="metric prepot">Pre Pots</strong> are based on if the player had the aura for the start of the attempt.
+				<strong class="metric flask">Flask</strong>, <strong class="metric food">Food</strong>, <strong class="metric battlerune">Rune</strong>, and <strong class="metric prepot">Pre Pots</strong> are based on if the player had the aura for the start of the attempt.
 			</p>
 			<p>
 				<strong class="metric combatpot">Combat Pots</strong> are if the player used a combat potion any point during a fight EXCEPT the start.
 			</p>
+			
+			
 			<p>
 				<strong class="metric missed">Red Cells</strong> indicate a player was missing for the attempt/encounter.
 			</p>
@@ -38,6 +40,7 @@
 		<div class="controls">
 			<button class="button small blue" data-bind="toggleClick: $root.showFlask, css: {active: $root.showFlask}">Flask</button>
 			<button class="button small yellow" data-bind="toggleClick: $root.showFood, css: {active: $root.showFood}">Food</button>
+			<button class="button small grey" data-bind="toggleClick: $root.showBattleRune, css: {active: $root.showBattleRune}">Rune</button>
 			<button class="button small green" data-bind="toggleClick: $root.showPrePot, css: {active: $root.showPrePot}">Pr. Pot</button>
 			<button class="button small red" data-bind="toggleClick: $root.showCombatPot, css: {active: $root.showCombatPot}">Co. Pot</button>
 		</div>
@@ -81,6 +84,9 @@
 					<!-- ko if: $root.showCombatPot -->
 					<div class="metric combatpot" data-bind="style: {height: hasCombatPot() ? '100%' : '0%'}"></div>		
 					<!-- /ko -->		
+					<!-- ko if: $root.showBattleRune -->
+					<div class="metric battlerune" data-bind="style: {height: hasBattleRune() ? '100%' : '0%'}"></div>
+					<!-- /ko -->
 				</div>
 				<!-- /ko -->
 				<!-- /ko -->
@@ -98,6 +104,9 @@
 					<!-- /ko -->
 					<!-- ko if: $root.showCombatPot -->
 					<div class="metric combatpot" data-bind="style: {height: combatPotPercent() + '%'}"></div>				
+					<!-- /ko -->
+					<!-- ko if: $root.showBattleRune -->
+					<div class="metric battlerune" data-bind="style: {height: battleRunePercent() + '%'}"></div>				
 					<!-- /ko -->
 				</div>
 				<!-- /ko -->

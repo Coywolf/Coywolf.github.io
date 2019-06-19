@@ -10,7 +10,10 @@ ko.bindingHandlers.toggleClick = {
 
 (function() {
 	function isFlask(auraName){
-		return auraName == "Flask of the Currents" || auraName == "Flask of Endless Fathoms" || auraName == "Flask of the Vast Horizon" || auraName == "Flask of the Undertow";
+		return auraName == "Flask of the Currents" || auraName == "Flask of Endless Fathoms" || auraName == "Flask of the Vast Horizon" || auraName == "Flask of the Undertow"
+			// new 8.2 flasks
+			|| auraName == "Greater Flask of the Currents" || auraName == "Greater Flask of Endless Fathoms" || auraName == "Greater Flask of the Vast Horizon" || auraName == "Greater Flask of the Undertow";
+		;
 	}
 
 	function isFood(auraName){
@@ -20,11 +23,21 @@ ko.bindingHandlers.toggleClick = {
 	function isPotion(auraName){
 		return auraName == "Battle Potion of Intellect" || auraName == "Battle Potion of Agility" || auraName == "Battle Potion of Strength" || 
 			auraName == "Battle Potion of Stamina" || auraName == "Potion of Bursting Blood" || auraName == "Steelskin Potion" || 
-			auraName == "Potion of Rising Death" || auraName == "Potion of Replenishment" || auraName == "Sapphire of Brilliance";
+			auraName == "Potion of Rising Death" || auraName == "Potion of Replenishment" || auraName == "Sapphire of Brilliance"
+			// new weird potions in 8.2
+			|| auraName == "Potion of Unbridled Fury" || auraName == "Potion of Wild Mending" || auraName == "Potion of Empowered Proximity" || auraName == "Potion of Focused Resolve"
+			//upgraded potions in 8.2
+			|| auraName == "Superior Battle Potion of Intellect" || auraName == "Superior Battle Potion of Agility" || auraName == "Superior Battle Potion of Strength" 
+			|| auraName == "Superior Battle Potion of Stamina" || auraName == "Superior Steelskin Potion"
+		;
+	}
+	
+	function isBattleRune(auraName){
+		return auraName == "Battle-Scarred Augmentation";
 	}
 
 	function auraFilter(aura){
-		return isFlask(aura.name) || isFood(aura.name) || isPotion(aura.name);
+		return isFlask(aura.name) || isFood(aura.name) || isPotion(aura.name) || isBattleRune(aura.name);
 	}
 
 	var groupBy = function(xs, key) {
@@ -61,6 +74,9 @@ ko.bindingHandlers.toggleClick = {
 		self.prePotPercent = ko.pureComputed(function() {
 			return self.personalFights().reduce((acc, cur) => {return cur.hasPrePot() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
 		});
+		self.battleRunePercent = ko.pureComputed(function() {
+			return self.personalFights().reduce((acc, cur) => {return cur.hasBattleRune() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
+		});
 		self.missedEncounter = ko.pureComputed(function(){
 			return self.presentAttempts() == 0;
 		});
@@ -74,7 +90,8 @@ ko.bindingHandlers.toggleClick = {
 					hasFood: ko.observable(false),
 					hasCombatPot: ko.observable(false),
 					hasPrePot: ko.observable(false),
-					wasMissing: ko.observable(!self.friendly.fights.find(i => {return i.id == fight.id}))
+					wasMissing: ko.observable(!self.friendly.fights.find(i => {return i.id == fight.id})),
+					hasBattleRune: ko.observable(false)
 				}
 				self.personalFights.push(personalFight);
 
@@ -90,10 +107,14 @@ ko.bindingHandlers.toggleClick = {
 							if(isFlask(aura.name)){
 								personalFight.hasFlask(true);
 							}
+							else if (isBattleRune(aura.name))
+							{
+								personalFight.hasBattleRune(true);
+							}
 							else if(isFood(aura.name)){
 								personalFight.hasFood(true);
 							}
-							else{
+							else if(isPotion(aura.name)){
 								personalFight.hasPrePot(true);
 							}
 						}
@@ -232,6 +253,7 @@ ko.bindingHandlers.toggleClick = {
 		self.showFood = ko.observable(true);
 		self.showPrePot = ko.observable(true);
 		self.showCombatPot = ko.observable(true);
+		self.showBattleRune = ko.observable(false);
 
 		function loadReport(key){
 			window.location.hash = key;
