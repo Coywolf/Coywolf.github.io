@@ -32,12 +32,27 @@ ko.bindingHandlers.toggleClick = {
 		;
 	}
 	
+	function isHealingItem(auraName){
+		return auraName == ""
+	}
+	
 	function isBattleRune(auraName){
 		return auraName == "Battle-Scarred Augmentation";
 	}
 
 	function auraFilter(aura){
 		return isFlask(aura.name) || isFood(aura.name) || isPotion(aura.name) || isBattleRune(aura.name);
+	}
+	
+	function isHealingCast(castName){
+		return castName == "Coastal Healing Potion" || castName == "Healthstone" || castName == "Silas' Vial of Continuous Curing"
+			// new healing potion in 8.2
+			|| castName == "Abyssal Healing Potion";
+	}
+	
+	function castFilter(cast)
+	{
+		return isHealingCast(cast.name);
 	}
 
 	var groupBy = function(xs, key) {
@@ -77,11 +92,14 @@ ko.bindingHandlers.toggleClick = {
 		self.battleRunePercent = ko.pureComputed(function() {
 			return self.personalFights().reduce((acc, cur) => {return cur.hasBattleRune() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
 		});
+		self.castedHealingPercent = ko.pureComputed(function() {
+			return self.personalFights().reduce((acc, cur) => {return cur.castedHealing() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
+		});
 		self.missedEncounter = ko.pureComputed(function(){
 			return self.presentAttempts() == 0;
 		});
 
-		self.computePercents = function(auras){
+		self.computePercents = function(auras, casts){
 			// todo use the auras and the fight data to compute the aura percents
 			for(var f = 0; f < self.fights().length; f++){
 				var fight = self.fights()[f];
@@ -91,7 +109,8 @@ ko.bindingHandlers.toggleClick = {
 					hasCombatPot: ko.observable(false),
 					hasPrePot: ko.observable(false),
 					wasMissing: ko.observable(!self.friendly.fights.find(i => {return i.id == fight.id})),
-					hasBattleRune: ko.observable(false)
+					hasBattleRune: ko.observable(false),
+					castedHealing: ko.observable(false)
 				}
 				self.personalFights.push(personalFight);
 
@@ -123,6 +142,16 @@ ko.bindingHandlers.toggleClick = {
 							personalFight.hasCombatPot(true);
 						}
 					}					
+				}
+				
+				console.log(casts);
+				for(var a = 0; a < casts.length; a++)
+				{
+					var cast = casts[a];
+					
+					if(isHealingCast(cast.name)){
+						personalFight.castedHealing(true);
+					}
 				}
 			};
 		}
@@ -175,8 +204,11 @@ ko.bindingHandlers.toggleClick = {
 		}
 
 		function initialize(key){
-			const fightsUrl = 'https://www.warcraftlogs.com:443/v1/report/fights/' + key + '?api_key=e5f56156fe3ade200af49d7aef8af180';
-			const eventsUrl = 'https://www.warcraftlogs.com:443/v1/report/tables/buffs/' + key + '?api_key=e5f56156fe3ade200af49d7aef8af180';
+			const warcraftLogsReportUrl = 'https://www.warcraftlogs.com:443/v1/report';
+			var keyData = key + '?api_key=e5f56156fe3ade200af49d7aef8af180';
+			const fightsUrl = warcraftLogsReportUrl + '/fights/' + keyData;
+			const eventsUrl = warcraftLogsReportUrl + '/tables/buffs/' + keyData;
+			const castsUrl = warcraftLogsReportUrl + '/tables/casts/' + keyData;
 
 			var fightData = apiCall(fightsUrl).then(data=>{
 				var bossFights = data.fights.filter(f => {
@@ -211,13 +243,23 @@ ko.bindingHandlers.toggleClick = {
 					// gather the buffs for each player
 					var buffs = apiCall(eventsUrl + '&start=' + start + '&end=' + end + '&targetid=' + f.id).then(buffData => {
 						return buffData.auras.filter(auraFilter);
-					}).then(auras => {
+					})
+					
+					// gather the casts for each player
+					var casts = apiCall(castsUrl + '&start=' + start + '&end=' + end + '&sourceid=' + f.id).then(castData => {
+						return castData.entries.filter(castFilter);
+					});
+					
+					Promise.all([buffs,casts])
+					.then(values => {
 						f.fightModels.forEach(pFight => {
-							pFight.computePercents(auras);
+							pFight.computePercents(values[0], values[1]);
 						})
 					}).finally(()=>{
 						self.players.push(f);
 					});
+					
+										
 				});
 			});			
 		}
@@ -254,6 +296,7 @@ ko.bindingHandlers.toggleClick = {
 		self.showPrePot = ko.observable(true);
 		self.showCombatPot = ko.observable(true);
 		self.showBattleRune = ko.observable(false);
+		self.showCastedHealing = ko.observable(false);
 
 		function loadReport(key){
 			window.location.hash = key;
