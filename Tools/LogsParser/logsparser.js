@@ -143,7 +143,7 @@ ko.bindingHandlers.toggleClick = {
 						}
 					}					
 				}
-				console.log(casts);
+				
 				for(var a = 0; a < casts.length; a++)
 				{
 					var cast = casts[a];
