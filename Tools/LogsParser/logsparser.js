@@ -52,7 +52,7 @@ ko.bindingHandlers.toggleClick = {
 	
 	function castFilter(cast)
 	{
-		return isHealingCast(cast.name);
+		return isHealingCast(cast.ability.name);
 	}
 
 	var groupBy = function(xs, key) {
@@ -143,13 +143,13 @@ ko.bindingHandlers.toggleClick = {
 						}
 					}					
 				}
-				
 				console.log(casts);
 				for(var a = 0; a < casts.length; a++)
 				{
 					var cast = casts[a];
+					var castedAbility = cast.ability.name; 
 					
-					if(isHealingCast(cast.name)){
+					if(isHealingCast(castedAbility) && cast.timestamp >= fight.start_time && cast.timestamp <= fight.end_time){
 						personalFight.castedHealing(true);
 					}
 				}
@@ -208,7 +208,7 @@ ko.bindingHandlers.toggleClick = {
 			var keyData = key + '?api_key=e5f56156fe3ade200af49d7aef8af180';
 			const fightsUrl = warcraftLogsReportUrl + '/fights/' + keyData;
 			const eventsUrl = warcraftLogsReportUrl + '/tables/buffs/' + keyData;
-			const castsUrl = warcraftLogsReportUrl + '/tables/casts/' + keyData;
+			const castsUrl = warcraftLogsReportUrl + '/events/casts/' + keyData;
 
 			var fightData = apiCall(fightsUrl).then(data=>{
 				var bossFights = data.fights.filter(f => {
@@ -247,9 +247,9 @@ ko.bindingHandlers.toggleClick = {
 					
 					// gather the casts for each player
 					var casts = apiCall(castsUrl + '&start=' + start + '&end=' + end + '&sourceid=' + f.id).then(castData => {
-						return castData.entries.filter(castFilter);
+						return castData.events.filter(castFilter);
 					});
-					
+
 					Promise.all([buffs,casts])
 					.then(values => {
 						f.fightModels.forEach(pFight => {
