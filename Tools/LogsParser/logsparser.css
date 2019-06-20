@@ -127,11 +127,15 @@ strong.metric {
 }
 
 .metric.prepot {
-	background-color: #4BAC3F;
+	background-color: #FF4500;
 }
 
 .metric.battlerune {
 	background-color: #D3D3D3;
+}
+
+.metric.healing {
+	background-color: #4BAC3F;
 }
 
 
@@ -333,6 +337,21 @@ strong.metric {
 
 .button.green:active,.button.green.active{
   background: #4BAC3F;
+}
+
+/* */
+
+.button.orange{
+  background-color: #FF7F50;
+  border-color: #FF7F50;
+}
+
+.button.orange:hover{
+  background-color: #FF6347;
+}
+
+.button.orange:active,.button.orange.active{
+  background: #FF4500;
 }
 
 /* */
