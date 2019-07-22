@@ -10,10 +10,9 @@ ko.bindingHandlers.toggleClick = {
 
 (function() {
 	function isFlask(auraName){
-		return auraName == "Flask of the Currents" || auraName == "Flask of Endless Fathoms" || auraName == "Flask of the Vast Horizon" || auraName == "Flask of the Undertow"
-			// new 8.2 flasks
-			|| auraName == "Greater Flask of the Currents" || auraName == "Greater Flask of Endless Fathoms" || auraName == "Greater Flask of the Vast Horizon" || auraName == "Greater Flask of the Undertow";
+		return auraName == "Greater Flask of the Currents" || auraName == "Greater Flask of Endless Fathoms" || auraName == "Greater Flask of the Vast Horizon" || auraName == "Greater Flask of the Undertow";
 		;
+		//auraName == "Flask of the Currents" || auraName == "Flask of Endless Fathoms" || auraName == "Flask of the Vast Horizon" || auraName == "Flask of the Undertow"
 	}
 
 	function isFood(auraName){
@@ -21,15 +20,14 @@ ko.bindingHandlers.toggleClick = {
 	}
 
 	function isPotion(auraName){
-		return auraName == "Battle Potion of Intellect" || auraName == "Battle Potion of Agility" || auraName == "Battle Potion of Strength" || 
-			auraName == "Battle Potion of Stamina" || auraName == "Potion of Bursting Blood" || auraName == "Steelskin Potion" || 
-			auraName == "Potion of Rising Death" || auraName == "Potion of Replenishment" || auraName == "Sapphire of Brilliance"
-			// new weird potions in 8.2
-			|| auraName == "Potion of Unbridled Fury" || auraName == "Potion of Wild Mending" || auraName == "Potion of Empowered Proximity" || auraName == "Potion of Focused Resolve"
-			//upgraded potions in 8.2
+		return auraName == "Potion of Unbridled Fury" || auraName == "Potion of Wild Mending" || auraName == "Potion of Empowered Proximity" || auraName == "Potion of Focused Resolve"
 			|| auraName == "Superior Battle Potion of Intellect" || auraName == "Superior Battle Potion of Agility" || auraName == "Superior Battle Potion of Strength" 
 			|| auraName == "Superior Battle Potion of Stamina" || auraName == "Superior Steelskin Potion"
 		;
+		// old potions in case you want to write a not strict mode
+		//auraName == "Battle Potion of Intellect" || auraName == "Battle Potion of Agility" || auraName == "Battle Potion of Strength" || 
+		//auraName == "Battle Potion of Stamina" || auraName == "Potion of Bursting Blood" || auraName == "Steelskin Potion" || 
+		//auraName == "Potion of Rising Death" || auraName == "Potion of Replenishment" || auraName == "Sapphire of Brilliance"
 	}
 	
 	function isHealingItem(auraName){
@@ -45,9 +43,9 @@ ko.bindingHandlers.toggleClick = {
 	}
 	
 	function isHealingCast(castName){
-		return castName == "Coastal Healing Potion" || castName == "Healthstone" || castName == "Silas' Vial of Continuous Curing"
-			// new healing potion in 8.2
-			|| castName == "Abyssal Healing Potion";
+		return castName == "Abyssal Healing Potion" || castName == "Healthstone"; // is healthstone as good as abyssal?
+		// old
+		//castName == "Coastal Healing Potion" || castName == "Silas' Vial of Continuous Curing"
 	}
 	
 	function castFilter(cast)
