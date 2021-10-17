@@ -38,23 +38,17 @@
   }
 
   function parseStreamNames(path){
-    if(path.startsWith('/')){
+    if(path.startsWith('#')){
       path = path.substring(1);
     }
 
     var tokens = path.split('/');
-
-    // not the best but just assuming that if the first token is 'twitch' that you're navigating directly to the twitch page, rather than trying to multistream the actual twitch channel
-    if(tokens[0] == "twitch"){
-      tokens.shift();
-    }
     
     return tokens.slice(0, 4);
   }
 
   function init(){
-    var pathname = layoutOnly ? "/twitch/vgbootcamp/vgbootcamp2/vgbootcamp3/vgbootcamp4" : location.pathname;
-    var streams = parseStreamNames(pathname);
+    var streams = parseStreamNames(location.hash);
 
     var players = streams.map((c, i) => new PlayerModel(c, i));
 
