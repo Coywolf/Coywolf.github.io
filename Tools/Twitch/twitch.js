@@ -66,8 +66,14 @@
         document.getElementById("ct-player-container").classList.add('even');
       }
       else{
-        players.forEach(p => p.playerContainerDiv.classList.remove('primary'));
         document.getElementById("ct-player-container").classList.remove('even');
+
+        players.forEach(p => {
+          p.playerContainerDiv.classList.remove('primary');
+          p.player.setMuted(true);
+        });
+        
+        player.player.setMuted(false);
         player.playerContainerDiv.classList.add('primary');
       }
     }
