@@ -37,15 +37,15 @@
         width: '100%',
         height: '100%',
         channel: self.channelName,
-        parent: ["coywolf.github.io"],
-        muted: index != 0
+        parent: ["coywolf.github.io"]
       }
 
       self.player = new Twitch.Player(self.elementId, options);
-
-      setTimeout(function(){
+      playerDiv.addEventListener('Twitch.Player.READY', function(){
+        console.log(self.elementId);
         self.player.setQuality('chunked');
-      }, 2000);      
+        self.player.setMuted(index != 0);
+      }, {once: true});    
     }
   }
 
