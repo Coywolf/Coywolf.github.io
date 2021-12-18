@@ -42,7 +42,10 @@
       }
 
       self.player = new Twitch.Player(self.elementId, options);
-      self.player.setQuality('chunked');
+
+      setTimeout(function(){
+        self.player.setQuality('chunked');
+      }, 2000);      
     }
   }
 
