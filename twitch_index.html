@@ -17,8 +17,29 @@
 	<link rel="stylesheet" type="text/css" href="Tools/Twitch/twitch.css"/>
 </head>	
 <body>
-	<div id="ct-player-container" class="ct-container">
+	<div id="ct-settings" class="ct-settings collapsed">
+		<div class="ct-settings-section">
+			<button id="ct-settings-bpin">Pin</button>
+		</div>
 
+		<div class="ct-settings-section">
+			<span>Layout</span>
+			<button id="ct-settings-bhorz">Horizontal</button>
+			<button id="ct-settings-bvert">Vertical</button>
+		</div>
+
+		<div class="ct-settings-section">
+			<span>Focus Audio</span>
+			<button id="ct-settings-bnfoc">No</button>
+			<button id="ct-settings-byfoc">Yes</button>
+		</div>
+
+		<div id="ct-settings-playerbuttons" class="ct-settings-section">
+			<span>Focus Stream</span>
+		</div>
+	</div>
+	<div id="ct-player-container" class="ct-container">
+		<div class="ct-container-break"></div>
 	</div>
 
   <script src= "https://player.twitch.tv/js/embed/v1.js"></script>
