@@ -170,7 +170,7 @@
         
         if(isAudioFocused && !layoutOnly){
           players.forEach(p => {
-            p.player.setMuted(p.index == focusedPlayer);
+            p.player.setMuted(p.index != focusedPlayer);
           });
         }
       }
