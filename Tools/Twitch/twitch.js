@@ -41,7 +41,7 @@
       }
 
       self.player = new Twitch.Player(self.elementId, options);
-      playerDiv.addEventListener('Twitch.Player.READY', function(){
+      playerDiv.addEventListener(Twitch.Embed.VIDEO_READY, function(){
         console.log(self.elementId);
         self.player.setQuality('chunked');
         self.player.setMuted(index != 0);
