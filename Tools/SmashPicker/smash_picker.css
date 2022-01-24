@@ -1,0 +1,80 @@
+body {
+  background-color: #272f2c;
+}
+
+#roster-image {
+  width: 100%;
+  grid-column: 1 / span 13;
+  grid-row: 1 / span 7;
+}
+
+.roster-container {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  grid-template-rows: repeat(7, 1fr);
+}
+
+.roster-container div {
+  pointer-events: none;
+}
+
+.roster-container div.hidden {
+  display: none;
+}
+
+.roster-container.allow .selection-box {
+  background-color: #008000aa;
+  
+}
+
+.roster-container.deny .selection-box {
+  background-color: #800000aa;
+}
+
+.roster-container .random-box {
+  background-color: #800080aa;
+  z-index: 10;
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 4fr;
+  grid-template-rows: auto;
+  grid-template-areas: 
+    "roll roll . character"
+    "allow deny . character"
+    "reset reset . costume";
+  column-gap: 10px;
+  row-gap: 10px;
+  padding: 15px 10%;
+  justify-items: center;
+  align-items: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.control-grid button {
+  padding: 15px 15%;
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  border-radius: 10px;
+  background-color: #98c2b2;
+}
+
+.control-grid button.active {
+  background-color: #02ec93;
+}
+
+.control-grid .character {
+  font-size: 3vw;
+  color: rgb(207, 140, 255);
+  border: 4px dashed rgb(255, 208, 54);
+  border-radius: 15px;
+  padding: 15px;
+}
+
+.control-grid .costume {
+  color: rgb(236, 209, 255);
+}

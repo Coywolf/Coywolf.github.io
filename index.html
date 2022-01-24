@@ -12,123 +12,14 @@
 	</script>
 
 	<meta charset="UTF-8">
-	<link rel="stylesheet" type="text/css" href="Tools/LogsParser/logsparser.css"/>
+	<link rel="stylesheet" type="text/css" href="Main/main.css"/>
 </head>	
 <body>
-	<div class="key-input">
-		<input data-bind="value: reportKey" placeholder="Report Link/Key" />
-	</div>
-	<div class="help">
-		<div>
-			<p>
-				Enter a report link/key to load. Each column corresponds to a boss and will include all attempts on the boss. By default, the colored bars represent the percentage of attempts for the boss for which the player had each aura. Click an encounter with multiple attempts to expand it, and the bars become a yes or no.
-			</p>
-			<p> 
-				<strong class="metric flask">Flask</strong> and <strong class="metric prepot">Pre Pots</strong> are based on if the player had the 8.2 version of flask/potion auras for the start of the attempt.
-			</p>
-			<p>
-				<strong class="metric food">Food</strong> and <strong class="metric battlerune">Rune</strong> are based on if the player had a 'Well Fed' and 'Battle-Scarred Augmentation' aura respectively at the start of the attempt.
-			</p>
-			<p>
-				<strong class="metric healing">Healing</strong> is based on if the player casted an abyssal healing potion or health stones at any point during a fight.
-			</p>
-			<p>
-				<strong class="metric combatpot">Combat Pots</strong> are if the player used an 8.2 potion any point during a fight EXCEPT the start.
-			</p>
-			
-			
-			<p>
-				<strong class="metric missed">Red Cells</strong> indicate a player was missing for the attempt/encounter.
-			</p>
-		</div>
-	</div>
-	<div style="display: none" class="container" data-bind="with: report, visible: report()">
-		<div class="controls">
-			<button class="button small blue" data-bind="toggleClick: $root.showFlask, css: {active: $root.showFlask}">Flask</button>
-			<button class="button small yellow" data-bind="toggleClick: $root.showFood, css: {active: $root.showFood}">Food</button>
-			<button class="button small grey" data-bind="toggleClick: $root.showBattleRune, css: {active: $root.showBattleRune}">Rune</button>
-			<button class="button small orange" data-bind="toggleClick: $root.showPrePot, css: {active: $root.showPrePot}">Pr. Pot</button>
-			<button class="button small red" data-bind="toggleClick: $root.showCombatPot, css: {active: $root.showCombatPot}">Co. Pot</button>
-			<button class="button small green" data-bind="toggleClick: $root.showCastedHealing, css: {active: $root.showCastedHealing}">Healing</button>
-		</div>
-
-		<!-- ko foreach: bosses -->
-			<!-- ko if: expanded -->
-			<!-- ko foreach: fights -->
-			<div class="boss-icon" data-bind="css: {kill: kill, wipe: !kill}, click: $parent.toggleExpand, style: {cursor: $parent.canExpand ? 'pointer' : ''}">
-				<img data-bind="attr: {src: $parent.bossIconUrl, title: name}" />
-				<span class="bosspercent" data-bind="text: (bossPercentage/100).toFixed(0) + '%', visible: !kill"></span>
-			</div>
-			<!-- /ko -->
-			<!-- /ko -->
-
-			<!-- ko ifnot: expanded -->			
-			<div class="boss-icon" data-bind="css: killClass, click: toggleExpand, style: {cursor: canExpand ? 'pointer' : ''}">
-				<img data-bind="attr: {src: bossIconUrl, title: name}" />
-				<span class="attemptcount" data-bind="text: fights().length"></span>
-				<span class="bosspercent" data-bind="text: (bossPercentage()/100).toFixed(0) + '%', visible: killClass == 'wipe'"></span>
-			</div>
-			<!-- /ko -->		
-		<!-- /ko -->
-
-		<!-- ko foreach: sortedPlayers -->
-			<div class="nameblock" data-bind="text: name, css: type, style: {'grid-row': $index() + 2}"></div>
-			
-			<!-- ko foreach: fightModels -->
-
-				<!-- ko if: boss.expanded -->
-				<!-- ko foreach: personalFights -->
-				<div class="block" data-bind="style: {'grid-row': $parentContext.$parentContext.$index() + 2}, css: {missed: wasMissing}">
-					<!-- ko if: $root.showFlask -->
-					<div class="metric flask" data-bind="style: {height: hasFlask() ? '100%' : '0%'}"></div>
-					<!-- /ko -->
-					<!-- ko if: $root.showFood -->
-					<div class="metric food" data-bind="style: {height: hasFood() ? '100%' : '0%'}"></div>
-					<!-- /ko -->
-					<!-- ko if: $root.showPrePot -->
-					<div class="metric prepot" data-bind="style: {height: hasPrePot() ? '100%' : '0%'}"></div>
-					<!-- /ko -->
-					<!-- ko if: $root.showCombatPot -->
-					<div class="metric combatpot" data-bind="style: {height: hasCombatPot() ? '100%' : '0%'}"></div>		
-					<!-- /ko -->		
-					<!-- ko if: $root.showBattleRune -->
-					<div class="metric battlerune" data-bind="style: {height: hasBattleRune() ? '100%' : '0%'}"></div>
-					<!-- /ko -->
-					<!-- ko if: $root.showCastedHealing -->
-					<div class="metric healing" data-bind="style: {height: castedHealing() ? '100%' : '0%'}"></div>
-					<!-- /ko -->
-				</div>
-				<!-- /ko -->
-				<!-- /ko -->
-
-				<!-- ko ifnot: boss.expanded -->			
-				<div class="block" data-bind="style: {'grid-row': $parentContext.$index() + 2}, css: {missed: missedEncounter}">
-					<!-- ko if: $root.showFlask -->
-					<div class="metric flask" data-bind="style: {height: flaskPercent() + '%'}"></div>
-					<!-- /ko -->
-					<!-- ko if: $root.showFood -->
-					<div class="metric food" data-bind="style: {height: foodPercent() + '%'}"></div>
-					<!-- /ko -->
-					<!-- ko if: $root.showPrePot -->
-					<div class="metric prepot" data-bind="style: {height: prePotPercent() + '%'}"></div>
-					<!-- /ko -->
-					<!-- ko if: $root.showCombatPot -->
-					<div class="metric combatpot" data-bind="style: {height: combatPotPercent() + '%'}"></div>				
-					<!-- /ko -->
-					<!-- ko if: $root.showBattleRune -->
-					<div class="metric battlerune" data-bind="style: {height: battleRunePercent() + '%'}"></div>				
-					<!-- /ko -->
-					<!-- ko if: $root.showCastedHealing -->
-					<div class="metric healing" data-bind="style: {height: castedHealingPercent() + '%'}"></div>				
-					<!-- /ko -->
-				</div>
-				<!-- /ko -->
-
-			<!-- /ko -->
-		<!-- /ko -->
-	</div>
-	
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"></script>
-	<script src="Tools/LogsParser/logsparser.js"></script>
+	<ul>
+		<li><a href="logparser.html">Log Parser</a></li>
+		<li><a href="twitch.html">Multitwitch</a></li>
+		<li><a href="smash_picker.html">Smash Character Picker</a></li>
+		<li><a href="minesweeper.html">Minesweeper</a></li>
+	</ul>
 </body>
 </html>

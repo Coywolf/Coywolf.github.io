@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-115047347-1"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'UA-115047347-1');
+	</script>
+
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="Tools/SmashPicker/smash_picker.css"/>
+</head>	
+<body>
+	<div class="roster-container">
+		<img id="roster-image" src="Tools/SmashPicker/smash_roster.png"/>
+	</div>
+
+	<div class="control-grid">
+		<button id="random-button" style="grid-area: roll">Pick a Character!</button>
+		<button id="al-button" style="grid-area: allow; justify-self: right;">Allow List</button>
+		<button id="dl-button" style="grid-area: deny; justify-self: left;">Deny List</button>
+		<button id="reset-button" style="grid-area: reset">Reset Selections</button>
+
+		<span id="character" class="character" style="grid-area: character; display: none"></span>
+		<span id="costume" class="costume" style="grid-area: costume"></span>
+	</div>
+
+	<script src="Tools/SmashPicker/roster.js"></script>
+	<script src="Tools/SmashPicker/smash_picker.js"></script>
+</body>
+</html>
