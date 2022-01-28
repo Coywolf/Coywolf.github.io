@@ -294,7 +294,7 @@
     // encode and write to both URL and cookie
     console.log("saving");
     var encodedString = encode();
-    location.hash = encodedString;
+    window.history.replaceState(null, 'Smash Picker', "#" + encodedString);
     localStorage.setItem(localStorageKey, encodedString);
   }
 
@@ -312,7 +312,7 @@
         decoded = decode(storedString);
         
         // loading from local storage which means the URL was empty, so go ahead and set the URL to the local storage value too
-        location.hash = storedString;
+        window.history.replaceState(null, 'Smash Picker', "#" + storedString);
       }
     }
 
