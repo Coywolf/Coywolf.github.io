@@ -46,7 +46,7 @@ const roster = [
 "R.O.B.",
 "Toon Link",
 "Wolf",
-"villager",
+"Villager",
 "Mega Man",
 "Wii Fit Trainer",
 "Rosalin & Luma",
