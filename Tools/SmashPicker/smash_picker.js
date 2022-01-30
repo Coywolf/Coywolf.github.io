@@ -8,6 +8,9 @@
   const characterTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";  // character table for encoding selections, not quite actually base64, replaced + and / to always be URL safe
   const localStorageKey = "smash-picker-settings";
 
+  const animationSteps = 20;
+  //var totalTime = 0;
+
   var rosterImage = document.getElementById("roster-image");  // the image itself
   var container = rosterImage.parentElement;
 
@@ -57,22 +60,50 @@
   function pickRandom(){
     if(selections.length == 0 && isAllowList) return;
 
-    var index = 0;
+    var list;
     if(isAllowList){
-      shuffle(selections);
-      index = selections[0];
+      list = selections;
     }
     else{
       if(denyList.length == 0) denyList = makeDenyList();
-      shuffle(denyList);
-      index = denyList[0];
+      list = denyList;
     }
 
-    var coords = indexToCoords(index);
+    // clear the last result and costume
+    setCharacterResult(); 
+    setCostumeResult();
+
+    shuffle(list);
+    //totalTime = 0;
+    animate_callback(list, 0);    
+  }
+
+  function animate_getTimeout(index){    
+    const minTimeout = 100;
+    const maxTimeout = 850;
+
+    var x = index / (animationSteps-2);
+    var t = x * x * x * x;  // easeInQuart https://easings.net/
+
+    var timeout = minTimeout + ((maxTimeout - minTimeout) * t);
+    //console.log(index, timeout);
+    //totalTime += timeout;
+    return timeout;
+  }
+
+  function animate_callback(list, index){
+    var characterIndex = list[index % list.length];
+    var coords = indexToCoords(characterIndex);
     setRandomBox(coords.x, coords.y);
 
-    setCharacterResult(index);
-    setCostumeResult(Math.floor(Math.random() * 8));
+    if(index < animationSteps-1){
+      setTimeout(animate_callback, animate_getTimeout(index), list, index+1);
+    }
+    else{
+      //console.log(totalTime);
+      setCharacterResult(characterIndex);
+      setCostumeResult(Math.floor(Math.random() * 8));
+    }
   }
 
   function makeDenyList(){
@@ -87,24 +118,38 @@
   }
 
   function setCharacterResult(num){
-    var label = roster[num];
+    if(num >= 0){
+      var label = roster[num];
 
-    var characterElement = document.getElementById("character");
-    while(characterElement.firstChild){ characterElement.removeChild(characterElement.firstChild); }
-    characterElement.appendChild(document.createTextNode(label));
+      var characterElement = document.getElementById("character");
+      while(characterElement.firstChild){ characterElement.removeChild(characterElement.firstChild); }
+      characterElement.appendChild(document.createTextNode(label));
 
-    characterElement.style.display = "block";
+      characterElement.style.display = "block";
+    }
+    else{
+      var characterElement = document.getElementById("character");
+      characterElement.style.display = "none";
+    }
   }
 
   function setCostumeResult(num){
-    var label = "Costume " + (num+1);
-    if(num > 0){
-      label += " (" + ["", "1R", "2R", "3R", "4R", "3L", "2L", "1L"][num] + ")";
-    }
+    if(num >= 0){
+      var label = "Costume " + (num+1);
+      if(num > 0){
+        label += " (" + ["", "1R", "2R", "3R", "4R", "3L", "2L", "1L"][num] + ")";
+      }
 
-    var costumeElement = document.getElementById("costume");
-    while(costumeElement.firstChild){ costumeElement.removeChild(costumeElement.firstChild); }
-    costumeElement.appendChild(document.createTextNode(label));
+      var costumeElement = document.getElementById("costume");
+      while(costumeElement.firstChild){ costumeElement.removeChild(costumeElement.firstChild); }
+      costumeElement.appendChild(document.createTextNode(label));
+
+      costumeElement.style.display = "block";
+    }
+    else{
+      var costumeElement = document.getElementById("costume");
+      costumeElement.style.display = "none";
+    }
   }
 
   function setRandomBox(x, y){
@@ -292,7 +337,6 @@
 
   function save(){
     // encode and write to both URL and cookie
-    console.log("saving");
     var encodedString = encode();
     window.history.replaceState(null, 'Smash Picker', "#" + encodedString);
     localStorage.setItem(localStorageKey, encodedString);
@@ -347,4 +391,5 @@
   }
 
   init();
+  window.setCharacterResult = setCharacterResult;
 })();
