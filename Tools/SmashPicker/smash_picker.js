@@ -9,7 +9,7 @@
   const localStorageKey = "smash-picker-settings";
 
   const animationSteps = 20;
-  //var totalTime = 0;
+  var totalTime = 0;
 
   var rosterImage = document.getElementById("roster-image");  // the image itself
   var container = rosterImage.parentElement;
@@ -70,39 +70,44 @@
     }
 
     // clear the last result and costume
-    setCharacterResult(); 
+    setCharacterResultBorder(false); 
     setCostumeResult();
 
     shuffle(list);
-    //totalTime = 0;
+    totalTime = 0;
     animate_callback(list, 0);    
   }
 
   function animate_getTimeout(index){    
     const minTimeout = 100;
-    const maxTimeout = 850;
+    const maxTimeout = 600;
 
     var x = index / (animationSteps-2);
-    var t = x * x * x * x;  // easeInQuart https://easings.net/
+    var t = x * x * x;  // easeInQuart https://easings.net/
 
     var timeout = minTimeout + ((maxTimeout - minTimeout) * t);
     //console.log(index, timeout);
-    //totalTime += timeout;
+    totalTime += timeout;
     return timeout;
   }
 
   function animate_callback(list, index){
     var characterIndex = list[index % list.length];
     var coords = indexToCoords(characterIndex);
+    
     setRandomBox(coords.x, coords.y);
+    setCharacterResult(characterIndex);
 
-    if(index < animationSteps-1){
+    if(list.length > 1 && index < animationSteps-1){
       setTimeout(animate_callback, animate_getTimeout(index), list, index+1);
     }
     else{
-      //console.log(totalTime);
-      setCharacterResult(characterIndex);
-      setCostumeResult(Math.floor(Math.random() * 8));
+      console.log(totalTime); 
+      // delayed by the animation time of the text, so the border should come on when the text is done
+      setTimeout(() => {
+        setCharacterResultBorder(true);
+        setCostumeResult(Math.floor(Math.random() * 8));
+      }, 300);
     }
   }
 
@@ -117,20 +122,47 @@
     return list;
   }
 
-  function setCharacterResult(num){
-    if(num >= 0){
-      var label = roster[num];
+  function setCharacterResultBorder(visible){
+    var characterBorder = document.getElementById("character-border");
+    if(visible){
+      // need to clear out the hidden name text to make sure it's not expanding the border
+      var characterListElement = document.getElementById("character-list");
+      var nameElement = characterListElement.lastElementChild;
+      while(nameElement.firstChild){ nameElement.removeChild(nameElement.firstChild); }
 
-      var characterElement = document.getElementById("character");
-      while(characterElement.firstChild){ characterElement.removeChild(characterElement.firstChild); }
-      characterElement.appendChild(document.createTextNode(label));
+      characterBorder.classList.add("on");
 
-      characterElement.style.display = "block";
+      if(randomBox){
+        randomBox.classList.add("final");
+      }
     }
     else{
-      var characterElement = document.getElementById("character");
-      characterElement.style.display = "none";
+      characterBorder.classList.remove("on");
+
+      if(randomBox){
+        randomBox.classList.remove("final");
+      }
     }
+  }
+
+  function setCharacterResult(num){
+    var label = roster[num];
+
+    var characterListElement = document.getElementById("character-list");
+    var oldNameElement = characterListElement.firstElementChild;
+    var newNameElement = characterListElement.lastElementChild;
+
+    // set the new name
+    while(newNameElement.firstChild){ newNameElement.removeChild(newNameElement.firstChild); }
+    newNameElement.appendChild(document.createTextNode(label));
+
+    // move the new name to the top
+    characterListElement.insertBefore(newNameElement, oldNameElement);
+
+    // trigger the animation
+    characterListElement.classList.remove("change");
+    characterListElement.offsetWidth;
+    characterListElement.classList.add("change");
   }
 
   function setCostumeResult(num){
@@ -391,4 +423,5 @@
   }
 
   init();
+  window.setCharacterResult = setCharacterResult;
 })();
