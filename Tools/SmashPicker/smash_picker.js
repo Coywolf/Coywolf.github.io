@@ -391,5 +391,4 @@
   }
 
   init();
-  window.setCharacterResult = setCharacterResult;
 })();
