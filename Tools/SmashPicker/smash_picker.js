@@ -8,13 +8,14 @@
   const characterTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";  // character table for encoding selections, not quite actually base64, replaced + and / to always be URL safe
   const localStorageKey = "smash-picker-settings";
 
-  const animationSteps = 20;
+  var animationSteps = 20;
   var totalTime = 0;
 
   var rosterImage = document.getElementById("roster-image");  // the image itself
   var container = rosterImage.parentElement;
 
   var isAllowList = true; // mode, either allow list or deny list
+  var isFullAnimation = true; // toggle between 1 and 20 animation steps
   // the div for the random result, plus it's grid x and y. holding the x and y to be able to hide/show the selection behind it
   var randomBox, randomBoxX, randomBoxY;  
 
@@ -102,7 +103,7 @@
       setTimeout(animate_callback, animate_getTimeout(index), list, index+1);
     }
     else{
-      console.log(totalTime); 
+      //console.log(totalTime); 
       // delayed by the animation time of the text, so the border should come on when the text is done
       setTimeout(() => {
         setCharacterResultBorder(true);
@@ -298,6 +299,21 @@
     if(!skipSave) save();
   }
 
+  function setAnimation(mode, skipSave){
+    isFullAnimation = mode;
+
+    if(isFullAnimation){
+      document.getElementById("animation-button").innerText = "Full Animation";
+      animationSteps = 20;
+    }
+    else{
+      document.getElementById("animation-button").innerText = "Short Animation";
+      animationSteps = 1;
+    }
+
+    if(!skipSave) save();
+  }
+
   // parseInt(x, 2)
   // x.toString(2)
   function encode(){
@@ -309,10 +325,14 @@
     var selectionIndex = 0;
     var invalidIndex = 0;
     var binaryChunk = 0;
-    for(var i = 0; i < gridWidth * gridHeight + 1; i++){ 
+    for(var i = 0; i < gridWidth * gridHeight + 2; i++){ 
       if(i == gridWidth * gridHeight){
-        // the mode needs to be encoded as well, so +1 on the loop and the first bit will be the mode
+        // the mode and animation need to be encoded as well, so +2 on the loop and the first bit will be the mode
         binaryChunk = binaryChunk | isAllowList;
+      }
+      else if(i == gridWidth * gridHeight + 1){
+        // the mode and animation need to be encoded as well, so +2 on the loop and the first bit will be the mode
+        binaryChunk = binaryChunk | isFullAnimation;
       }
       else if(i == invalids[invalidIndex]){
         // skip over this, so this would be | 0 so no need to do anything with the chunk
@@ -325,9 +345,9 @@
       }
       // else, neither invalid nor selection, again | 0 and no need to do anything with the chunk
 
-      if(i % 6 == 5 || i == gridWidth * gridHeight){
+      if(i % 6 == 5 || i == gridWidth * gridHeight + 1){
         // need to fill out the whole last chunk to make it easier for decoding
-        if(i == gridWidth * gridHeight){
+        if(i == gridWidth * gridHeight + 1){
           binaryChunk = binaryChunk << 5 - (i % 6);
         }
 
@@ -345,26 +365,30 @@
   }
 
   function decode(encodedString){
-    var gridSelections = [], mode;
+    var gridSelections = [], mode, animation;
     
     var expandedString = "";
     for(var encodedCharacter of encodedString){
       var characterTableIndex = characterTable.indexOf(encodedCharacter);
       expandedString += characterTableIndex.toString(2).padStart(6, '0');
     }
-
+    
     for(var i = 0; i < expandedString.length; i++){
       if(i == gridWidth * gridHeight){
         // done with all the selection data, this one is the mode bit
         mode = expandedString[i] == 1;
+      }
+      else if(i == gridWidth * gridHeight + 1){
+        // this one is the animation bit
+        animation = expandedString[i] == 1;
         break;
       }
       else if(expandedString[i] == 1){
         gridSelections.push(i);
       }
     }
-
-    return {selections: gridSelections, isAllowList: mode};
+    
+    return {selections: gridSelections, isAllowList: mode, isFullAnimation: animation};
   }
 
   function save(){
@@ -394,6 +418,7 @@
 
     if(decoded){
       setMode(decoded.isAllowList, true);
+      setAnimation(decoded.isFullAnimation, true);
       resetSelections(true);
 
       for(var selection of decoded.selections){
@@ -418,7 +443,11 @@
     var resetButton = document.getElementById("reset-button");
     resetButton.addEventListener("click", function(){resetSelections();} );
 
+    var animationButton = document.getElementById("animation-button");
+    animationButton.addEventListener("click", function(){setAnimation(!isFullAnimation);} );
+
     setMode(false, true);
+    setAnimation(true, true);
     load();
   }
 

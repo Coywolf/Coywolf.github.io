@@ -47,7 +47,7 @@ body {
   grid-template-areas: 
     "roll roll . character"
     "allow deny . character"
-    "reset reset . costume";
+    "reset animation . costume";
   column-gap: 10px;
   row-gap: 10px;
   padding: 15px 10%;
