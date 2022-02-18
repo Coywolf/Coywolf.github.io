@@ -163,7 +163,7 @@ ko.bindingHandlers.toggleClick = {
 		self.fights = ko.observableArray(groupedFights.sort((a,b) => {
 			return a.start_time - b.start_time;
 		}));
-		self.bossIconUrl = 'https://dmszsuqyoe6y6.cloudfront.net/img/warcraft/bosses/' + self.boss +'-icon.jpg';
+		self.bossIconUrl = 'https://assets.rpglogs.com/img/warcraft/bosses/' + self.boss +'-icon.jpg';
 		self.killClass = groupedFights.reduce((acc, cur) => {return acc || cur.kill}, false) ? 'kill' : 'wipe';
 
 		self.canExpand = self.fights().length > 1;
