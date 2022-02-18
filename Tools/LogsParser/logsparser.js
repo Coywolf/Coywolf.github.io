@@ -17,7 +17,7 @@ ko.bindingHandlers.toggleClick = {
 	}
 	
 	function isBattleRune(auraName){
-		return auraName == "Battle-Scarred Augmentation";
+		return auraName == "Veiled Augmentation"; // The Infinite rune in 9.2 might have a different buff name but I havent found it yet
 	}
 
 	function auraFilter(aura){
@@ -33,7 +33,7 @@ ko.bindingHandlers.toggleClick = {
 	}
 	
 	function isHealingPotionCast(castName){
-		return castName == "Spiritual Healing Potion";
+		return castName == "Spiritual Healing Potion"; // The 9.2 healing potion is likely to be Cosmic Healing Potion
 	}
 	
 	function castFilter(cast)
