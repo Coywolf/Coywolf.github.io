@@ -24,10 +24,10 @@
 				Enter a report link/key to load. Each column corresponds to a boss and will include all attempts on the boss. By default, the colored bars represent the percentage of attempts for the boss for which the player had each aura. Click an encounter with multiple attempts to expand it, and the bars become a yes or no.
 			</p>
 			<p> 
-				<strong class="metric flask">Flask</strong> and <strong class="metric prepot">Pre Pots</strong> are based on if the player had the 8.2 version of flask/potion auras for the start of the attempt.
+				<strong class="metric prepot">Pre Pots</strong> are based on if the player had the 8.2 version of potion auras in the first 30 seconds of the attempt.
 			</p>
 			<p>
-				<strong class="metric food">Food</strong> and <strong class="metric battlerune">Rune</strong> are based on if the player had a 'Well Fed' and 'Battle-Scarred Augmentation' aura respectively at the start of the attempt.
+				<strong class="metric battlerune">Rune</strong> are based on if the player had a 'Battle-Scarred Augmentation' aura respectively at the start of the attempt.
 			</p>
 			<p>
 				<strong class="metric healing">Healing</strong> is based on if the player casted an abyssal healing potion or health stones at any point during a fight.
@@ -44,8 +44,6 @@
 	</div>
 	<div style="display: none" class="container" data-bind="with: report, visible: report()">
 		<div class="controls">
-			<button class="button small blue" data-bind="toggleClick: $root.showFlask, css: {active: $root.showFlask}">Flask</button>
-			<button class="button small yellow" data-bind="toggleClick: $root.showFood, css: {active: $root.showFood}">Food</button>
 			<button class="button small grey" data-bind="toggleClick: $root.showBattleRune, css: {active: $root.showBattleRune}">Rune</button>
 			<button class="button small orange" data-bind="toggleClick: $root.showPrePot, css: {active: $root.showPrePot}">Pr. Pot</button>
 			<button class="button small red" data-bind="toggleClick: $root.showCombatPot, css: {active: $root.showCombatPot}">Co. Pot</button>
@@ -79,12 +77,6 @@
 				<!-- ko if: boss.expanded -->
 				<!-- ko foreach: personalFights -->
 				<div class="block" data-bind="style: {'grid-row': $parentContext.$parentContext.$index() + 2}, css: {missed: wasMissing}">
-					<!-- ko if: $root.showFlask -->
-					<div class="metric flask" data-bind="style: {height: hasFlask() ? '100%' : '0%'}"></div>
-					<!-- /ko -->
-					<!-- ko if: $root.showFood -->
-					<div class="metric food" data-bind="style: {height: hasFood() ? '100%' : '0%'}"></div>
-					<!-- /ko -->
 					<!-- ko if: $root.showPrePot -->
 					<div class="metric prepot" data-bind="style: {height: hasPrePot() ? '100%' : '0%'}"></div>
 					<!-- /ko -->
@@ -103,12 +95,6 @@
 
 				<!-- ko ifnot: boss.expanded -->			
 				<div class="block" data-bind="style: {'grid-row': $parentContext.$index() + 2}, css: {missed: missedEncounter}">
-					<!-- ko if: $root.showFlask -->
-					<div class="metric flask" data-bind="style: {height: flaskPercent() + '%'}"></div>
-					<!-- /ko -->
-					<!-- ko if: $root.showFood -->
-					<div class="metric food" data-bind="style: {height: foodPercent() + '%'}"></div>
-					<!-- /ko -->
 					<!-- ko if: $root.showPrePot -->
 					<div class="metric prepot" data-bind="style: {height: prePotPercent() + '%'}"></div>
 					<!-- /ko -->

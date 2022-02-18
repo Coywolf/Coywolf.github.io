@@ -9,16 +9,6 @@ ko.bindingHandlers.toggleClick = {
 };
 
 (function() {
-	function isFlask(auraName){
-		return auraName == "Greater Flask of the Currents" || auraName == "Greater Flask of Endless Fathoms" || auraName == "Greater Flask of the Vast Horizon" || auraName == "Greater Flask of the Undertow";
-		;
-		//auraName == "Flask of the Currents" || auraName == "Flask of Endless Fathoms" || auraName == "Flask of the Vast Horizon" || auraName == "Flask of the Undertow"
-	}
-
-	function isFood(auraName){
-		return auraName == "Well Fed";
-	}
-
 	function isPotion(auraName){
 		return auraName == "Potion of Unbridled Fury" || auraName == "Potion of Wild Mending" || auraName == "Potion of Empowered Proximity" || auraName == "Potion of Focused Resolve"
 			|| auraName == "Superior Battle Potion of Intellect" || auraName == "Superior Battle Potion of Agility" || auraName == "Superior Battle Potion of Strength" 
@@ -39,7 +29,7 @@ ko.bindingHandlers.toggleClick = {
 	}
 
 	function auraFilter(aura){
-		return isFlask(aura.name) || isFood(aura.name) || isPotion(aura.name) || isBattleRune(aura.name);
+		return isPotion(aura.name) || isBattleRune(aura.name);
 	}
 	
 	function isHealingCast(castName){
@@ -75,12 +65,6 @@ ko.bindingHandlers.toggleClick = {
 			return self.personalFights().filter(f => {return !f.wasMissing()});
 		})
 
-		self.flaskPercent = ko.pureComputed(function() {
-			return self.personalFights().reduce((acc, cur) => {return cur.hasFlask() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
-		});
-		self.foodPercent = ko.pureComputed(function() {
-			return self.personalFights().reduce((acc, cur) => {return cur.hasFood() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
-		});
 		self.combatPotPercent = ko.pureComputed(function() {
 			return self.personalFights().reduce((acc, cur) => {return cur.hasCombatPot() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
 		});
@@ -102,8 +86,6 @@ ko.bindingHandlers.toggleClick = {
 			for(var f = 0; f < self.fights().length; f++){
 				var fight = self.fights()[f];
 				var personalFight = {
-					hasFlask: ko.observable(false),
-					hasFood: ko.observable(false),
 					hasCombatPot: ko.observable(false),
 					hasPrePot: ko.observable(false),
 					wasMissing: ko.observable(!self.friendly.fights.find(i => {return i.id == fight.id})),
@@ -121,15 +103,9 @@ ko.bindingHandlers.toggleClick = {
 						// offsetting this first start, cause it seems sometimes the band doesn't start until just slightly after the boss. giving a second of leeway there
 						if((fight.start_time + 1000) >= potion.startTime && fight.start_time <= potion.endTime){
 							// aura covers the start of the fight, so increment the appropriate counter
-							if(isFlask(aura.name)){
-								personalFight.hasFlask(true);
-							}
-							else if (isBattleRune(aura.name))
+							if (isBattleRune(aura.name))
 							{
 								personalFight.hasBattleRune(true);
-							}
-							else if(isFood(aura.name)){
-								personalFight.hasFood(true);
 							}
 							else if(isPotion(aura.name)){
 								personalFight.hasPrePot(true);
@@ -289,12 +265,10 @@ ko.bindingHandlers.toggleClick = {
 		});
 
 		self.report = ko.observable();
-		self.showFlask = ko.observable(true);
-		self.showFood = ko.observable(true);
 		self.showPrePot = ko.observable(true);
 		self.showCombatPot = ko.observable(true);
-		self.showBattleRune = ko.observable(false);
-		self.showCastedHealing = ko.observable(false);
+		self.showBattleRune = ko.observable(true);
+		self.showCastedHealing = ko.observable(true);
 
 		function loadReport(key){
 			window.location.hash = key;
