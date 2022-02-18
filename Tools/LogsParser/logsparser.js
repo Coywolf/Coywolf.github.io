@@ -10,9 +10,9 @@ ko.bindingHandlers.toggleClick = {
 
 (function() {
 	function isPotion(auraName){
-		return auraName == "Potion of Unbridled Fury" || auraName == "Potion of Wild Mending" || auraName == "Potion of Empowered Proximity" || auraName == "Potion of Focused Resolve"
-			|| auraName == "Superior Battle Potion of Intellect" || auraName == "Superior Battle Potion of Agility" || auraName == "Superior Battle Potion of Strength" 
-			|| auraName == "Superior Battle Potion of Stamina" || auraName == "Superior Steelskin Potion"
+		return auraName == "Potion of Spectral Strength" || auraName == "Potion of Spectral Stamina" || auraName == "Potion of Spectral Agility" || auraName == "Potion of Spectral Intellect"
+			|| auraName == "Potion of Deathly Fixation" || auraName == "Potion of Empowered Exorcisms" || auraName == "Potion of Divine Awakening" 
+			|| auraName == "Potion of Phantom Fire" || auraName == "Potion of Sacrificial Anima" || auraName == "Potion of Hardened Shadows"
 		;
 	}
 	
