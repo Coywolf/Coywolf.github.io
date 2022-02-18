@@ -43,7 +43,7 @@ body {
 	padding: 10px;
 	width: 50%;
 	color: #d9b08c;
-	text-align: center;
+	text-align: left;
 	display: inline-block;
 }
 
@@ -114,14 +114,6 @@ strong.metric {
 	color: black;
 }
 
-.metric.flask {
-	background-color: #11ABC1;
-}
-
-.metric.food {
-	background-color: #F5B935;
-}
-
 .metric.combatpot {
 	background-color: #DF3062;
 }
@@ -134,7 +126,11 @@ strong.metric {
 	background-color: #D3D3D3;
 }
 
-.metric.healing {
+.metric.healthstone {
+	background-color: #C5FF00;
+}
+
+.metric.healingpotion {
 	background-color: #4BAC3F;
 }
 
@@ -307,7 +303,8 @@ strong.metric {
 /* Smaller buttons styles */
 
 .button.small{
-  padding: 4px 12px;
+  padding: 3px 6px;
+  font-size: 12px;
 }
 
 /* Colored buttons styles */

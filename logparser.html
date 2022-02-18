@@ -23,20 +23,24 @@
 			<p>
 				Enter a report link/key to load. Each column corresponds to a boss and will include all attempts on the boss. By default, the colored bars represent the percentage of attempts for the boss for which the player had each aura. Click an encounter with multiple attempts to expand it, and the bars become a yes or no.
 			</p>
+			<br>
+			<p>
+				<strong class="metric battlerune">Runes</strong> are based on if the player had a 'Veiled Augmentation' buff at the start of the attempt.
+			</p>
 			<p> 
-				<strong class="metric flask">Flask</strong> and <strong class="metric prepot">Pre Pots</strong> are based on if the player had the 8.2 version of flask/potion auras for the start of the attempt.
+				<strong class="metric prepot">Pre Pots</strong> are based on if the player had a 9.2 potion buff in the first 30 seconds of the attempt.
 			</p>
 			<p>
-				<strong class="metric food">Food</strong> and <strong class="metric battlerune">Rune</strong> are based on if the player had a 'Well Fed' and 'Battle-Scarred Augmentation' aura respectively at the start of the attempt.
+				<strong class="metric combatpot">Combat Pots</strong> are if the player used a 9.2 potion any point during a fight EXCEPT the first 30 seconds of the attempt.
 			</p>
 			<p>
-				<strong class="metric healing">Healing</strong> is based on if the player casted an abyssal healing potion or health stones at any point during a fight.
+				<strong class="metric healthstone">Healthstone</strong> is based on if the player casted a health stone at any point during a fight.
 			</p>
 			<p>
-				<strong class="metric combatpot">Combat Pots</strong> are if the player used an 8.2 potion any point during a fight EXCEPT the start.
+				<strong class="metric healingpotion">Healing Potion</strong> is based on if the player casted a 'Spiritual Healing Potion' at any point during a fight.
 			</p>
-			
-			
+
+			<br>
 			<p>
 				<strong class="metric missed">Red Cells</strong> indicate a player was missing for the attempt/encounter.
 			</p>
@@ -44,12 +48,11 @@
 	</div>
 	<div style="display: none" class="container" data-bind="with: report, visible: report()">
 		<div class="controls">
-			<button class="button small blue" data-bind="toggleClick: $root.showFlask, css: {active: $root.showFlask}">Flask</button>
-			<button class="button small yellow" data-bind="toggleClick: $root.showFood, css: {active: $root.showFood}">Food</button>
 			<button class="button small grey" data-bind="toggleClick: $root.showBattleRune, css: {active: $root.showBattleRune}">Rune</button>
 			<button class="button small orange" data-bind="toggleClick: $root.showPrePot, css: {active: $root.showPrePot}">Pr. Pot</button>
 			<button class="button small red" data-bind="toggleClick: $root.showCombatPot, css: {active: $root.showCombatPot}">Co. Pot</button>
-			<button class="button small green" data-bind="toggleClick: $root.showCastedHealing, css: {active: $root.showCastedHealing}">Healing</button>
+			<button class="button small blue" data-bind="toggleClick: $root.showCastedHealthStone, css: {active: $root.showCastedHealthStone}">Healthstone</button>
+			<button class="button small green" data-bind="toggleClick: $root.showCastedHealingPotion, css: {active: $root.showCastedHealingPotion}">H. Potion</button>
 		</div>
 
 		<!-- ko foreach: bosses -->
@@ -79,11 +82,8 @@
 				<!-- ko if: boss.expanded -->
 				<!-- ko foreach: personalFights -->
 				<div class="block" data-bind="style: {'grid-row': $parentContext.$parentContext.$index() + 2}, css: {missed: wasMissing}">
-					<!-- ko if: $root.showFlask -->
-					<div class="metric flask" data-bind="style: {height: hasFlask() ? '100%' : '0%'}"></div>
-					<!-- /ko -->
-					<!-- ko if: $root.showFood -->
-					<div class="metric food" data-bind="style: {height: hasFood() ? '100%' : '0%'}"></div>
+					<!-- ko if: $root.showBattleRune -->
+					<div class="metric battlerune" data-bind="style: {height: hasBattleRune() ? '100%' : '0%'}"></div>
 					<!-- /ko -->
 					<!-- ko if: $root.showPrePot -->
 					<div class="metric prepot" data-bind="style: {height: hasPrePot() ? '100%' : '0%'}"></div>
@@ -91,11 +91,11 @@
 					<!-- ko if: $root.showCombatPot -->
 					<div class="metric combatpot" data-bind="style: {height: hasCombatPot() ? '100%' : '0%'}"></div>		
 					<!-- /ko -->		
-					<!-- ko if: $root.showBattleRune -->
-					<div class="metric battlerune" data-bind="style: {height: hasBattleRune() ? '100%' : '0%'}"></div>
+					<!-- ko if: $root.showCastedHealthStone -->
+					<div class="metric healthstone" data-bind="style: {height: castedHealthStone() ? '100%' : '0%'}"></div>
 					<!-- /ko -->
-					<!-- ko if: $root.showCastedHealing -->
-					<div class="metric healing" data-bind="style: {height: castedHealing() ? '100%' : '0%'}"></div>
+					<!-- ko if: $root.showCastedHealingPotion -->
+					<div class="metric healingpotion" data-bind="style: {height: castedHealingPotion() ? '100%' : '0%'}"></div>
 					<!-- /ko -->
 				</div>
 				<!-- /ko -->
@@ -103,11 +103,8 @@
 
 				<!-- ko ifnot: boss.expanded -->			
 				<div class="block" data-bind="style: {'grid-row': $parentContext.$index() + 2}, css: {missed: missedEncounter}">
-					<!-- ko if: $root.showFlask -->
-					<div class="metric flask" data-bind="style: {height: flaskPercent() + '%'}"></div>
-					<!-- /ko -->
-					<!-- ko if: $root.showFood -->
-					<div class="metric food" data-bind="style: {height: foodPercent() + '%'}"></div>
+					<!-- ko if: $root.showBattleRune -->
+					<div class="metric battlerune" data-bind="style: {height: battleRunePercent() + '%'}"></div>				
 					<!-- /ko -->
 					<!-- ko if: $root.showPrePot -->
 					<div class="metric prepot" data-bind="style: {height: prePotPercent() + '%'}"></div>
@@ -115,11 +112,11 @@
 					<!-- ko if: $root.showCombatPot -->
 					<div class="metric combatpot" data-bind="style: {height: combatPotPercent() + '%'}"></div>				
 					<!-- /ko -->
-					<!-- ko if: $root.showBattleRune -->
-					<div class="metric battlerune" data-bind="style: {height: battleRunePercent() + '%'}"></div>				
+					<!-- ko if: $root.showCastedHealthStone -->
+					<div class="metric healthstone" data-bind="style: {height: castedHealthStonePercent() + '%'}"></div>				
 					<!-- /ko -->
-					<!-- ko if: $root.showCastedHealing -->
-					<div class="metric healing" data-bind="style: {height: castedHealingPercent() + '%'}"></div>				
+					<!-- ko if: $root.showCastedHealingPotion -->
+					<div class="metric healingpotion" data-bind="style: {height: castedHealingPotionPercent() + '%'}"></div>				
 					<!-- /ko -->
 				</div>
 				<!-- /ko -->
