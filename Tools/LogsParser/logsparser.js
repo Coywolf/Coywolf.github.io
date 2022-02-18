@@ -14,14 +14,6 @@ ko.bindingHandlers.toggleClick = {
 			|| auraName == "Superior Battle Potion of Intellect" || auraName == "Superior Battle Potion of Agility" || auraName == "Superior Battle Potion of Strength" 
 			|| auraName == "Superior Battle Potion of Stamina" || auraName == "Superior Steelskin Potion"
 		;
-		// old potions in case you want to write a not strict mode
-		//auraName == "Battle Potion of Intellect" || auraName == "Battle Potion of Agility" || auraName == "Battle Potion of Strength" || 
-		//auraName == "Battle Potion of Stamina" || auraName == "Potion of Bursting Blood" || auraName == "Steelskin Potion" || 
-		//auraName == "Potion of Rising Death" || auraName == "Potion of Replenishment" || auraName == "Sapphire of Brilliance"
-	}
-	
-	function isHealingItem(auraName){
-		return auraName == ""
 	}
 	
 	function isBattleRune(auraName){
@@ -33,9 +25,15 @@ ko.bindingHandlers.toggleClick = {
 	}
 	
 	function isHealingCast(castName){
-		return castName == "Abyssal Healing Potion" || castName == "Healthstone"; // is healthstone as good as abyssal?
-		// old
-		//castName == "Coastal Healing Potion" || castName == "Silas' Vial of Continuous Curing"
+		return isHealthstoneCast(castName) || isHealingPotionCast(castName);
+	}
+	
+	function isHealthstoneCast(castName){
+		return castName == "Healthstone";
+	}
+	
+	function isHealingPotionCast(castName){
+		return castName == "Spiritual Healing Potion";
 	}
 	
 	function castFilter(cast)
@@ -74,8 +72,11 @@ ko.bindingHandlers.toggleClick = {
 		self.battleRunePercent = ko.pureComputed(function() {
 			return self.personalFights().reduce((acc, cur) => {return cur.hasBattleRune() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
 		});
-		self.castedHealingPercent = ko.pureComputed(function() {
-			return self.personalFights().reduce((acc, cur) => {return cur.castedHealing() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
+		self.castedHealthStonePercent = ko.pureComputed(function() {
+			return self.personalFights().reduce((acc, cur) => {return cur.castedHealthStone() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
+		});
+		self.castedHealingPotionPercent = ko.pureComputed(function() {
+			return self.personalFights().reduce((acc, cur) => {return cur.castedHealingPotion() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
 		});
 		self.missedEncounter = ko.pureComputed(function(){
 			return self.presentAttempts() == 0;
@@ -90,7 +91,8 @@ ko.bindingHandlers.toggleClick = {
 					hasPrePot: ko.observable(false),
 					wasMissing: ko.observable(!self.friendly.fights.find(i => {return i.id == fight.id})),
 					hasBattleRune: ko.observable(false),
-					castedHealing: ko.observable(false)
+					castedHealthStone: ko.observable(false),
+					castedHealingPotion: ko.observable(false)
 				}
 				self.personalFights.push(personalFight);
 
@@ -107,9 +109,10 @@ ko.bindingHandlers.toggleClick = {
 							{
 								personalFight.hasBattleRune(true);
 							}
-							else if(isPotion(aura.name)){
-								personalFight.hasPrePot(true);
-							}
+						}
+						else if(isPotion(aura.name) && potion.endTime >= fight.start_time && potion.startTime <= fight.start_time + 30000){
+							// it's a potion, it's not a prepot, but still overlaps the fight, so this is a combat potion
+							personalFight.hasPrePot(true);
 						}
 						else if(isPotion(aura.name) && potion.endTime >= fight.start_time && potion.startTime <= fight.end_time){
 							// it's a potion, it's not a prepot, but still overlaps the fight, so this is a combat potion
@@ -123,8 +126,11 @@ ko.bindingHandlers.toggleClick = {
 					var cast = casts[a];
 					var castedAbility = cast.ability.name; 
 					
-					if(isHealingCast(castedAbility) && cast.timestamp >= fight.start_time && cast.timestamp <= fight.end_time){
-						personalFight.castedHealing(true);
+					if(isHealthstoneCast(castedAbility) && cast.timestamp >= fight.start_time && cast.timestamp <= fight.end_time){
+						personalFight.castedHealthStone(true);
+					}
+					else if(isHealingPotionCast(castedAbility) && cast.timestamp >= fight.start_time && cast.timestamp <= fight.end_time){
+						personalFight.castedHealingPotion(true);
 					}
 				}
 			};
@@ -268,7 +274,8 @@ ko.bindingHandlers.toggleClick = {
 		self.showPrePot = ko.observable(true);
 		self.showCombatPot = ko.observable(true);
 		self.showBattleRune = ko.observable(true);
-		self.showCastedHealing = ko.observable(true);
+		self.showCastedHealthStone = ko.observable(true);
+		self.showCastedHealingPotion = ko.observable(true);
 
 		function loadReport(key){
 			window.location.hash = key;

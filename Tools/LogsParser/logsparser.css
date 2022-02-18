@@ -126,7 +126,11 @@ strong.metric {
 	background-color: #D3D3D3;
 }
 
-.metric.healing {
+.metric.healthstone {
+	background-color: #C5FF00;
+}
+
+.metric.healingpotion {
 	background-color: #4BAC3F;
 }
 
