@@ -303,7 +303,8 @@ strong.metric {
 /* Smaller buttons styles */
 
 .button.small{
-  padding: 4px 12px;
+  padding: 3px 6px;
+  font-size: 12px;
 }
 
 /* Colored buttons styles */
