@@ -33,7 +33,7 @@ ko.bindingHandlers.toggleClick = {
 	}
 	
 	function isHealingPotionCast(castName){
-		return castName == "Spiritual Healing Potion"; // The 9.2 healing potion is likely to be Cosmic Healing Potion
+		return castName == "Spiritual Healing Potion" || castName == "Cosmic Healing Potion";
 	}
 	
 	function castFilter(cast)
@@ -211,9 +211,9 @@ ko.bindingHandlers.toggleClick = {
 						end = f.end_time;
 					}
 				})
-
+				
 				data.friendlies.filter(f => {
-					return f.type != "NPC";
+					return f.type != "NPC" && f.type != "Pet";
 				}).forEach(f => {
 					// set up an array for each player that corresponds to the boss list
 					f.fightModels = self.bosses().map(b => {
