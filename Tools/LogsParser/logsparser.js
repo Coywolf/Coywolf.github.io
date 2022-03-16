@@ -83,6 +83,7 @@ ko.bindingHandlers.toggleClick = {
 		});
 
 		self.computePercents = function(auras, casts){
+			
 			// todo use the auras and the fight data to compute the aura percents
 			for(var f = 0; f < self.fights().length; f++){
 				var fight = self.fights()[f];
@@ -102,21 +103,22 @@ ko.bindingHandlers.toggleClick = {
 					for(var p = 0; p < aura.bands.length; p++){
 						var potion = aura.bands[p];
 
-						// offsetting this first start, cause it seems sometimes the band doesn't start until just slightly after the boss. giving a second of leeway there
-						if((fight.start_time + 1000) >= potion.startTime && fight.start_time <= potion.endTime){
-							// aura covers the start of the fight, so increment the appropriate counter
-							if (isBattleRune(aura.name))
-							{
+						if(isBattleRune(aura.name)){
+							// offsetting this first start, cause it seems sometimes the band doesn't start until just slightly after the boss. giving a second of leeway there
+							if((fight.start_time + 1000) >= potion.startTime && fight.start_time <= potion.endTime){
+								// aura covers the start of the fight, so increment the appropriate counter
 								personalFight.hasBattleRune(true);
 							}
 						}
-						else if(isPotion(aura.name) && potion.endTime >= fight.start_time && potion.startTime <= fight.start_time + 30000){
-							// it's a potion, it's not a prepot, but still overlaps the fight, so this is a combat potion
-							personalFight.hasPrePot(true);
-						}
-						else if(isPotion(aura.name) && potion.endTime >= fight.start_time && potion.startTime <= fight.end_time){
-							// it's a potion, it's not a prepot, but still overlaps the fight, so this is a combat potion
-							personalFight.hasCombatPot(true);
+						else if(isPotion(aura.name)){
+							if(potion.endTime >= fight.start_time && potion.startTime <= fight.start_time + 30000){
+								// it's a potion and was active in the first 30 seconds of the fight, consider it a pre pot
+								personalFight.hasPrePot(true);
+							}
+							else if(potion.endTime >= fight.start_time && potion.startTime <= fight.end_time){
+								// it's a potion, it's not a prepot, but still overlaps the fight, so this is a combat potion
+								personalFight.hasCombatPot(true);
+							}
 						}
 					}					
 				}
@@ -200,7 +202,7 @@ ko.bindingHandlers.toggleClick = {
 				}).sort((a,b) => {
 					return a.fights()[0].start_time - b.fights()[0].start_time;
 				}));
-
+				
 				// find the earliest start and latest end of the fights. this is used for the auras call
 				var start,end;
 				bossFights.forEach(f =>{

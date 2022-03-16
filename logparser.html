@@ -104,19 +104,19 @@
 				<!-- ko ifnot: boss.expanded -->			
 				<div class="block" data-bind="style: {'grid-row': $parentContext.$index() + 2}, css: {missed: missedEncounter}">
 					<!-- ko if: $root.showBattleRune -->
-					<div class="metric battlerune" data-bind="style: {height: battleRunePercent() + '%'}"></div>				
+					<div class="metric battlerune" data-bind="style: {height: battleRunePercent() + '%'}, attr: {title: Math.floor(battleRunePercent()) + '%'}"></div>				
 					<!-- /ko -->
 					<!-- ko if: $root.showPrePot -->
-					<div class="metric prepot" data-bind="style: {height: prePotPercent() + '%'}"></div>
+					<div class="metric prepot" data-bind="style: {height: prePotPercent() + '%'}, attr: {title: Math.floor(prePotPercent()) + '%'}"></div>
 					<!-- /ko -->
 					<!-- ko if: $root.showCombatPot -->
-					<div class="metric combatpot" data-bind="style: {height: combatPotPercent() + '%'}"></div>				
+					<div class="metric combatpot" data-bind="style: {height: combatPotPercent() + '%'}, attr: {title: Math.floor(combatPotPercent()) + '%'}"></div>				
 					<!-- /ko -->
 					<!-- ko if: $root.showCastedHealthStone -->
-					<div class="metric healthstone" data-bind="style: {height: castedHealthStonePercent() + '%'}"></div>				
+					<div class="metric healthstone" data-bind="style: {height: castedHealthStonePercent() + '%'}, attr: {title: Math.floor(castedHealthStonePercent()) + '%'}"></div>				
 					<!-- /ko -->
 					<!-- ko if: $root.showCastedHealingPotion -->
-					<div class="metric healingpotion" data-bind="style: {height: castedHealingPotionPercent() + '%'}"></div>				
+					<div class="metric healingpotion" data-bind="style: {height: castedHealingPotionPercent() + '%'}, attr: {title: Math.floor(castedHealingPotionPercent()) + '%'}"></div>				
 					<!-- /ko -->
 				</div>
 				<!-- /ko -->
