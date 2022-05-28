@@ -5,13 +5,17 @@ body {
     justify-content: space-around;
 }
 
-.key-input {
+.page-settings {
 	width: 100%;
 	text-align: center;
 	color: #d9b08c;
 }
 
-.key-input input{
+.page-settings button {
+	margin-left: 30px;
+}
+
+.page-settings input{
 	width: 300px;
 	padding:15px 0px 15px 8px;
 	border-radius:5px;
@@ -25,7 +29,7 @@ body {
   	border:none;
 }
 
-.key-input input:focus{
+.page-settings input:focus{
 	box-shadow:inset 4px 6px 10px -4px rgba(0,0,0,0.7), 0 1px 1px -1px rgba(255,255,255,0.3);
 	background:rgba(0,0,0,0.3);
 	outline:none;
@@ -51,12 +55,18 @@ body {
 	margin: 5px;
 }
 
-.controls {
+.buffs_mode .controls {
 	height: 64px;
 	grid-row: 1;
 	display: grid;
 	grid-template-columns: 1fr 1fr 1fr;
 	grid-template-rows: 1fr 1fr;
+	padding: 2px;
+}
+
+.defensives_mode .controls {
+	height: 64px;
+	grid-row: 1;
 	padding: 2px;
 }
 
@@ -142,21 +152,38 @@ strong.metric {
 	grid-template-columns: auto;
 	grid-template-rows: auto;
 	grid-auto-columns: 64px;
-	grid-auto-rows: 32px;
-	grid-gap: 4px;
+	/* grid-auto-rows: 32px; */
+	gap: 4px;
 	overflow-x: auto;
 	padding: 8px;
 }
 
-.block{
-	width: 64px;
-	height: 32px;
+.block{	
 	display: grid;
 	grid-auto-columns: 1fr;
-	align-items: end;
-	border-width: 1px;
+  align-items: end;
+  gap: 4px;
+}
+
+.buffs_mode .block {
+  width: 64px;
+  height: 32px;
+  border-width: 1px;
 	border-color: black;
 	border-style: solid;
+}
+
+.defensives_mode .block span{
+  width: 64px;
+  height: 32px;
+  border-width: 1px;
+	border-color: black;
+  border-style: solid;
+  color: #d9b08c;
+  text-align: center;  
+  font-size: large;
+  display: grid;
+  align-items: center;
 }
 
 .block>div {
@@ -168,15 +195,39 @@ strong.metric {
 }
 
 .nameblock{
-	height: 32px;
-	grid-row: 1;
 	white-space: nowrap;
-	display: grid;
-	align-content: center;
+	display: grid;	
 	font-family: verdana;
 	font-size: large;
-	padding-right: 8px;
-	text-align: right;
+  padding-right: 8px;	
+  gap: 4px;
+}
+
+.buffs_mode .nameblock{
+  height: 32px;	
+  text-align: right;
+  grid-row: 1;
+  align-content: center;
+}
+
+.defensives_mode .nameblock{
+  text-align: left;
+  color: lightslategrey
+}
+
+.defensives_mode .nameblock span{
+  height: 32px;  
+  display: grid;
+  align-items: center;
+  padding-left: 16px;
+}
+
+.header {
+  background-color:#1e2421;
+}
+
+.nameblock span.header {
+  padding-left: 8px;
 }
 
 .DeathKnight {
@@ -305,6 +356,11 @@ strong.metric {
 .button.small{
   padding: 3px 6px;
   font-size: 12px;
+}
+
+.button.large{
+  padding: 8px 24px;
+  font-size: 15px;
 }
 
 /* Colored buttons styles */

@@ -17,7 +17,7 @@ ko.bindingHandlers.toggleClick = {
 	}
 	
 	function isBattleRune(auraName){
-		return auraName == "Veiled Augmentation"; // The Infinite rune in 9.2 might have a different buff name but I havent found it yet
+		return auraName == "Veiled Augmentation" || auraName == "Eternal Augmentation";
 	}
 
 	function auraFilter(aura){
@@ -41,6 +41,36 @@ ko.bindingHandlers.toggleClick = {
 		return isHealingCast(cast.ability.name);
 	}
 
+	function getAbilitiesForFriendly(friendly){
+		var tokens = friendly.icon.split("-");
+		var className = tokens[0];
+		var specName;
+
+		if(tokens.length > 1){
+			specName = tokens[1];
+		}
+
+		var abilities = [];
+		var abilityList = ability_list[className];
+
+		for(var specList in abilityList){
+			if(specList == "Common" || !specName || specList == specName){
+				for(var ability of abilityList[specList]){
+					abilities.push({
+						name: ability,
+						displayName: ability + (specList == "Common" ? "" : " (" + specList + ")")
+					});
+				}
+			}
+		}
+
+		return abilities.sort((a, b) => {
+			if(a.name < b.name) { return -1; }
+				if(a.name > b.name) { return 1; }
+				return 0;
+		});
+	}
+
 	var groupBy = function(xs, key) {
 		return xs.reduce(function(rv, x) {
 			(rv[x[key]] = rv[x[key]] || []).push(x);
@@ -50,6 +80,28 @@ ko.bindingHandlers.toggleClick = {
 
 	var percentageReducer = (acc, cur) => {
 		return acc + Math.max(Math.min(cur.endTime, fight.end_time) - Math.max(cur.startTime, fight.start_time), 0);
+	}
+
+	// represents a defensive ability for a player for a boss
+	function abilityModel(ability){
+		var self = this;
+
+		self.ability = ability;
+
+		self.uses = ko.observable(0);
+
+		self.matches = function(cast){
+			return cast.ability.name == self.ability.name;
+		}
+
+		self.tryAddUse = function(cast){
+			if(self.matches(cast)){
+				self.uses(self.uses() + 1);
+				return true;
+			}
+			
+			return false;
+		}
 	}
 
 	function playerFightModel(boss, friendly){
@@ -62,6 +114,10 @@ ko.bindingHandlers.toggleClick = {
 		self.presentAttempts = ko.pureComputed(function(){
 			return self.personalFights().filter(f => {return !f.wasMissing()});
 		})
+
+		self.abilityModels = getAbilitiesForFriendly(self.friendly).map(a => {
+			return new abilityModel(a);
+		});
 
 		self.combatPotPercent = ko.pureComputed(function() {
 			return self.personalFights().reduce((acc, cur) => {return cur.hasCombatPot() ? (acc + 1) : acc}, 0) / self.presentAttempts().length * 100;
@@ -80,6 +136,10 @@ ko.bindingHandlers.toggleClick = {
 		});
 		self.missedEncounter = ko.pureComputed(function(){
 			return self.presentAttempts() == 0;
+		});
+
+		self.defensiveUses = ko.pureComputed(function(){
+			return self.abilityModels.reduce((acc, cur) => {return acc + cur.uses()}, 0);
 		});
 
 		self.computePercents = function(auras, casts){
@@ -136,6 +196,20 @@ ko.bindingHandlers.toggleClick = {
 					}
 				}
 			};
+		}		
+
+		self.computeDefensives = function(casts) {
+			// filter down to just the casts matching this boss's time range
+			var bossCasts = casts.filter(c => {
+				return c.timestamp >= self.boss.start_time && c.timestamp <= self.boss.end_time;
+			});
+
+			// add each cast to the first matching ability model
+			for(var cast of bossCasts){
+				for(var model of self.abilityModels){
+					if(model.tryAddUse(cast)) break;
+				}
+			}
 		}
 	}
 
@@ -147,6 +221,8 @@ ko.bindingHandlers.toggleClick = {
 		self.fights = ko.observableArray(groupedFights.sort((a,b) => {
 			return a.start_time - b.start_time;
 		}));
+		self.start_time = self.fights()[0].start_time;
+		self.end_time = self.fights()[self.fights().length - 1].end_time;
 		self.bossIconUrl = 'https://assets.rpglogs.com/img/warcraft/bosses/' + self.boss +'-icon.jpg';
 		self.killClass = groupedFights.reduce((acc, cur) => {return acc || cur.kill}, false) ? 'kill' : 'wipe';
 
@@ -222,21 +298,35 @@ ko.bindingHandlers.toggleClick = {
 						return new playerFightModel(b, f); 
 					});
 
+					// gather list of abilities, used for filtering casts and showing in the player name column
+					f.abilityModels = getAbilitiesForFriendly(f).map(a => {
+						return new abilityModel(a);
+					});
+
+					f.expandAbilities = ko.observable(true);
+
 					// gather the buffs for each player
 					var buffs = apiCall(eventsUrl + '&start=' + start + '&end=' + end + '&targetid=' + f.id).then(buffData => {
 						return buffData.auras.filter(auraFilter);
 					})
 					
 					// gather the casts for each player
-					var casts = apiCall(castsUrl + '&start=' + start + '&end=' + end + '&sourceid=' + f.id).then(castData => {
+					var allCasts = apiCall(castsUrl + '&options=0&start=' + start + '&end=' + end + '&sourceid=' + f.id);
+					var buffsCasts = allCasts.then(castData => {
 						return castData.events.filter(castFilter);
 					});
+					var defensivesCasts = allCasts.then(castData => {
+						return castData.events.filter(c => {
+							return f.abilityModels.some(a => a.matches(c));
+						});
+					});
 
-					Promise.all([buffs,casts])
+					Promise.all([buffs,buffsCasts,defensivesCasts])
 					.then(values => {
 						f.fightModels.forEach(pFight => {
-							pFight.computePercents(values[0], values[1]);
-						})
+							pFight.computePercents(values[0], values[1]);							
+							pFight.computeDefensives(values[2]);		
+						});
 					}).finally(()=>{
 						self.players.push(f);
 					});
@@ -251,6 +341,8 @@ ko.bindingHandlers.toggleClick = {
 	
 	function viewModel(){
 		var self = this;
+
+		self.mode = ko.observable('buffs');
 
 		self._key = ko.observable();
 		self.reportKey = ko.computed({
@@ -279,19 +371,67 @@ ko.bindingHandlers.toggleClick = {
 		self.showCastedHealthStone = ko.observable(true);
 		self.showCastedHealingPotion = ko.observable(true);
 
+		function parseHash(){
+			var settings = {};
+
+			if(window.location.hash){				
+				var hashString = window.location.hash.substring(1);
+				var props = hashString.split("&");
+
+				for(var prop of props){
+					var tokens = prop.split("=");
+					settings[tokens[0]] = tokens[1];
+				}				
+			}	
+
+			return settings;		
+		}
+
+		function saveHash(){
+			var settings = {};
+
+			if(self.reportKey()){
+				settings.k = self.reportKey();
+			}
+
+			if(self.mode()){
+				settings.m = self.mode();
+			}
+
+			var hashString = "";
+
+			for(var prop in settings){
+				if(hashString) hashString += "&";
+				hashString += prop;
+				hashString += "=";
+				hashString += settings[prop];
+			}
+
+			window.location.hash = hashString;
+		}
+
 		function loadReport(key){
-			window.location.hash = key;
+			saveHash();
 			self.report(new reportModel(key));
 		}
 
 		self.initialize = function(){
-			if(window.location.hash){
-				self.reportKey(window.location.hash.substring(1));
+			var settings = parseHash();
+			if(settings.k){
+				self.reportKey(settings.k);
+			}
+
+			if(settings.m){
+				self.mode(settings.m);
 			}
 		}
 
 		self.reportKey.subscribe(function(nv){
 			loadReport(nv);
+		});
+
+		self.mode.subscribe(function(nv){
+			saveHash();
 		});
 	}
 	

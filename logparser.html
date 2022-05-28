@@ -13,19 +13,22 @@
 
 	<meta charset="UTF-8">
 	<link rel="stylesheet" type="text/css" href="Tools/LogsParser/logsparser.css"/>
+	<title>Log Parser</title>
 </head>	
 <body>
-	<div class="key-input">
+	<div class="page-settings">
 		<input data-bind="value: reportKey" placeholder="Report Link/Key" />
+		<button class="button grey large" data-bind="css: {active: mode() == 'buffs'}, click: function(){mode('buffs')}">Buffs</button>
+		<button class="button grey large" data-bind="css: {active: mode() == 'defensives'}, click: function(){mode('defensives')}">Defensives</button>
 	</div>
 	<div class="help">
-		<div>
+		<div data-bind="visible: mode() == 'buffs'">
 			<p>
 				Enter a report link/key to load. Each column corresponds to a boss and will include all attempts on the boss. By default, the colored bars represent the percentage of attempts for the boss for which the player had each aura. Click an encounter with multiple attempts to expand it, and the bars become a yes or no.
 			</p>
 			<br>
 			<p>
-				<strong class="metric battlerune">Runes</strong> are based on if the player had a 'Veiled Augmentation' buff at the start of the attempt.
+				<strong class="metric battlerune">Runes</strong> are based on if the player had a 'Veiled Augmentation' or 'Eternal Augmentation' buff at the start of the attempt.
 			</p>
 			<p> 
 				<strong class="metric prepot">Pre Pots</strong> are based on if the player had a 9.2 potion buff in the first 30 seconds of the attempt.
@@ -45,8 +48,18 @@
 				<strong class="metric missed">Red Cells</strong> indicate a player was missing for the attempt/encounter.
 			</p>
 		</div>
+		<div data-bind="visible: mode() == 'defensives'">
+			<p>
+				Enter a report link/key to load. Each column corresponds to a boss and will include all attempts on the boss. Some abilities are specific to one or more specs and will list the spec name next to the ability. If a player switches specs during a boss, all abilities for that class will be shown.
+			</p>
+			<br>
+			<p>
+				Click on a player name to collapse the abilities for that player.
+			</p>
+		</div>
 	</div>
-	<div style="display: none" class="container" data-bind="with: report, visible: report()">
+	<!-- ko if: mode() == 'buffs' -->
+	<div style="display: none" class="container buffs_mode" data-bind="with: report, visible: report()">
 		<div class="controls">
 			<button class="button small grey" data-bind="toggleClick: $root.showBattleRune, css: {active: $root.showBattleRune}">Rune</button>
 			<button class="button small orange" data-bind="toggleClick: $root.showPrePot, css: {active: $root.showPrePot}">Pr. Pot</button>
@@ -124,8 +137,52 @@
 			<!-- /ko -->
 		<!-- /ko -->
 	</div>
+	<!-- /ko -->
+
+	<!-- ko if: mode() == 'defensives' -->
+	<div style="display: none" class="container defensives_mode" data-bind="with: report, visible: report()">
+		<div class="controls"></div>
+
+		<!-- ko foreach: bosses -->		
+			<div class="boss-icon" data-bind="css: killClass">
+				<img data-bind="attr: {src: bossIconUrl, title: name}" />
+				<span class="attemptcount" data-bind="text: fights().length"></span>
+				<span class="bosspercent" data-bind="text: (bossPercentage()/100).toFixed(0) + '%', visible: killClass == 'wipe'"></span>
+			</div>
+		<!-- /ko -->
+
+		<!-- ko foreach: sortedPlayers -->
+			<div class="nameblock" data-bind="style: {'grid-row': $index() + 2}">
+				<span class="header" data-bind="text: name + (expandAbilities() ? '' : '...'), css: type, toggleClick: expandAbilities" style="grid-row: 1; cursor: pointer"></span>
+
+				<!-- ko if: expandAbilities -->
+				<!-- ko foreach: abilityModels -->
+					<span data-bind="text: ability.displayName, style: {'grid-row': $index() + 2}"></span>
+				<!-- /ko -->
+				<!-- /ko -->
+			</div>
+			
+			<!-- ko foreach: fightModels -->
+	
+				<div class="block" data-bind="style: {'grid-row': $parentContext.$index() + 2}">
+					<span class="header" data-bind="text: defensiveUses" style="grid-row: 1"></span>
+
+					<!-- ko if: $parent.expandAbilities -->
+					<!-- ko foreach: abilityModels -->
+					<span data-bind="text: uses, style: {'grid-row': $index() + 2}"></span>
+					<!-- /ko -->
+					<!-- /ko -->
+				</div>
+
+			<!-- /ko -->
+
+
+		<!-- /ko -->
+	</div>
+	<!-- /ko -->
 	
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"></script>
+	<script src="Tools/LogsParser/defensives.js"></script>
 	<script src="Tools/LogsParser/logsparser.js"></script>
 </body>
 </html>
