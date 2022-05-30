@@ -141,7 +141,9 @@
 
 	<!-- ko if: mode() == 'defensives' -->
 	<div style="display: none" class="container defensives_mode" data-bind="with: report, visible: report()">
-		<div class="controls"></div>
+		<div class="controls">
+			<button class="button blue" data-bind="click: collapseButtonClick, text: collapseButtonText"></button>
+		</div>
 
 		<!-- ko foreach: bosses -->		
 			<div class="boss-icon" data-bind="css: killClass">

@@ -55,19 +55,21 @@ body {
 	margin: 5px;
 }
 
-.buffs_mode .controls {
-	height: 64px;
+.controls {
+  height: 64px;
 	grid-row: 1;
 	display: grid;
+}
+
+.buffs_mode .controls {	
 	grid-template-columns: 1fr 1fr 1fr;
 	grid-template-rows: 1fr 1fr;
 	padding: 2px;
 }
 
 .defensives_mode .controls {
-	height: 64px;
-	grid-row: 1;
-	padding: 2px;
+  align-items: center;
+  justify-items: center;
 }
 
 .boss-icon {

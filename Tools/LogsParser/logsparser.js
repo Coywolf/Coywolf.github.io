@@ -253,6 +253,18 @@ ko.bindingHandlers.toggleClick = {
 			});
 		});
 
+		self.allPlayersCollapsed = ko.pureComputed(function(){
+			return self.players().every(f => {return !f.expandAbilities()});
+		});
+		self.collapseButtonText = ko.pureComputed(function(){
+			return self.allPlayersCollapsed() ? "Expand All" : "Collapse All";
+		});
+		self.collapseButtonClick = function(){
+			var shouldExpand = self.allPlayersCollapsed();
+
+			self.players().forEach(f => {f.expandAbilities(shouldExpand)});
+		};
+
 		function apiCall(endpoint){
 			const params = {
 			};
