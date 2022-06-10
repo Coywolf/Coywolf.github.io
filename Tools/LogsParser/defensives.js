@@ -120,10 +120,10 @@ const ability_list = {
     "Retribution": ["Shield of Vengeance"]
   },
   "Priest": {
-    Common: ["Fade"],
+    Common: ["Fade", "Desperate Prayer"],
     "Discipline": [],
     "Holy": [],
-    "Shadow": ["Vampiric Embrace","Shadow Mend","Dispersion","Desperate Prayer","Power Word: Shield"]
+    "Shadow": ["Vampiric Embrace","Shadow Mend","Dispersion","Power Word: Shield"]
   },
   "Rogue": {
     Common: ["Cloak of Shadows","Crimson Vial","Evasion","Feint"],
@@ -144,9 +144,9 @@ const ability_list = {
     "Destruction": []
   },
   "Warrior": {
-    Common: ["Spell Reflection", "Enraged Regeneration"],
-    "Arms": [],
-    "Fury": [],
+    Common: ["Spell Reflection"],
+    "Arms": ["Die by the Sword"],
+    "Fury": ["Enraged Regeneration"],
     "Protection": []
   }
 }
