@@ -138,7 +138,7 @@ const ability_list = {
     "Restoration": []
   },
   "Warlock": {
-    Common: ["Unending Resolve", "Dark Pact"],
+    Common: ["Unending Resolve", "Dark Pact", "Mortal Coil"],
     "Affliction": [],
     "Demonology": [],
     "Destruction": []
