@@ -107,6 +107,10 @@ body {
   flex-basis: 100%;
 }
 
+.ct-playercount-1 .ct-container-break {
+  display: none;
+}
+
 /* Horizontal even layouts */
 /* One player */
 .ct-container.horizontal.even.ct-playercount-1 .ct-player-container {
