@@ -6,6 +6,7 @@
   var isLayoutHorizontal = true;
   var isAudioFocused = true;
   var focusedPlayer = null;
+  var mode = '';  // focus, isolate, even
 
   var players = [];
 
@@ -13,8 +14,8 @@
     var self = this;
 
     self.channelName = channel;
-    self.index = index;
-    self.elementId = "ct-player-" + self.index; 
+    self.id = index;
+    self.elementId = "ct-player-" + self.id; 
 
     self.playerContainerDiv = document.createElement("div");
     self.playerContainerDiv.classList.add("ct-player-container");
@@ -42,7 +43,6 @@
 
       self.player = new Twitch.Player(self.elementId, options);
       self.player.addEventListener(Twitch.Embed.VIDEO_READY, function(){
-        console.log(self.elementId);
         self.player.setQuality('chunked');
         self.player.setMuted(index != 0);
       }, {once: true});    
@@ -72,6 +72,25 @@
       }
     });
 
+    // help
+    var settingsHelpButton = document.getElementById("ct-settings-bhelp");
+    var helpModal = document.getElementById("help-modal");
+    settingsHelpButton.addEventListener('click', function(e){
+      if(helpModal.classList.contains("hidden")){
+        helpModal.classList.remove("hidden");
+        settingsHelpButton.classList.add("active");
+      }
+      else{
+        helpModal.classList.add("hidden");
+        settingsHelpButton.classList.remove("active");
+      }
+    });
+    helpModal.addEventListener('click', function(e){
+      helpModal.classList.add("hidden");
+      settingsHelpButton.classList.remove("active");
+    });
+
+    // pin
     var settingsPinButton = document.getElementById("ct-settings-bpin");
     settingsPinButton.addEventListener('click', function(e){
       isSettingsPinned = !isSettingsPinned;
@@ -139,59 +158,155 @@
     });
     updateAudioButtonStyles();  // init the buttons for the default setting
 
+    var applyFocusAudio = function(){
+      if((isAudioFocused || mode == "isolate") && !layoutOnly){
+        players.forEach(p => {
+          p.player.setMuted(p.id != focusedPlayer);
+        });
+      }
+    }
+
     // players
-    var togglePrimary = function(){
-      var player = this;
+    var setMode = function(newMode){
+      var container = document.getElementById("ct-player-container");
 
-      if(focusedPlayer == player.index){
-        // this is already the focused player, so toggle off focus mode
-        var playerButton = document.getElementById("ct-playerbutton-" + player.index);
-        playerButton.classList.remove("active");
-        player.playerContainerDiv.classList.remove('primary');
-
-        var container = document.getElementById("ct-player-container");
+      if(newMode == "even"){        
+        container.classList.remove("isolate");
         container.classList.remove("focus");
         container.classList.add("even");
 
-        focusedPlayer = null;
-      }
-      else{
-        // not the focused player, so either changing focus or turning focus mode on
-        if(focusedPlayer != null){
-          var oldPlayerButton = document.getElementById("ct-playerbutton-" + focusedPlayer);
-          oldPlayerButton.classList.remove("active");
-          players[focusedPlayer].playerContainerDiv.classList.remove('primary');
+        if(mode == "isolate"){      
+          container.classList.remove("ct-playercount-1");
+          container.classList.add("ct-playercount-" + players.length);          
         }
-
-        var newPlayerButton = document.getElementById("ct-playerbutton-" + player.index);
-        newPlayerButton.classList.add("active");
-        player.playerContainerDiv.classList.add('primary');
-
-        var container = document.getElementById("ct-player-container");
+      }
+      else if (newMode == "isolate"){
         container.classList.remove("even");
         container.classList.add("focus");
-
-        focusedPlayer = player.index;
+        container.classList.add("isolate");
         
-        if(isAudioFocused && !layoutOnly){
-          players.forEach(p => {
-            p.player.setMuted(p.index != focusedPlayer);
-          });
+        if(newMode != mode){          
+          container.classList.remove("ct-playercount-" + players.length);
+          container.classList.add("ct-playercount-1");
         }
+      }
+      else{
+        container.classList.remove("even");
+        container.classList.remove("isolate");
+        container.classList.add("focus");
+
+        if(mode == "isolate"){      
+          container.classList.remove("ct-playercount-1");
+          container.classList.add("ct-playercount-" + players.length);          
+        }
+      }
+
+      mode = newMode;
+    }
+
+    // set the given player to have the given style (active/isolate), and clear the style from the rest
+    // either argument as null will remove active and isolate from all buttons
+    var setPlayerButtons = function(id, style){
+      players.forEach(player => {
+        var playerButton = document.getElementById("ct-playerbutton-" + player.id);
+
+        playerButton.classList.remove("active");
+        playerButton.classList.remove("isolate");
+
+        if(player.id == id){
+          playerButton.classList.add(style);
+        }
+      });
+    }
+
+    // set the given container to have the primary class, remove it from all others
+    // passing null will remove it from all
+    var setPrimaryContainer = function(id){
+      players.forEach(player => {
+        if(player.id == id){
+          player.playerContainerDiv.classList.add("primary");
+        }
+        else{
+          player.playerContainerDiv.classList.remove("primary");
+        }
+      });
+    }
+
+    var removePlayer = function(id){
+      var playerIndex = players.findIndex(p => p.id == id);      
+
+      if(playerIndex > -1){
+        var p = players[playerIndex];
+
+        if(p.player){
+          p.player.pause();
+        }
+
+        var playerButton = document.getElementById("ct-playerbutton-" + p.id);
+        playerButton.remove();
+        p.playerContainerDiv.remove();
+        
+        players.splice(playerIndex, 1);        
+
+        var streams = parseStreamNames(location.hash);
+        var streamsIndex = streams.findIndex(s => s == p.channelName);
+
+        if(streamsIndex > -1){
+          streams.splice(streamsIndex, 1);
+          var newHash = "#" + streams.join("/");
+          location.hash = newHash;
+        }
+
+        var container = document.getElementById("ct-player-container");
+        container.classList.remove("ct-playercount-" + (players.length+1));
+        container.classList.add("ct-playercount-" + players.length);
+      }
+    }
+
+    var playerHandler = function(e){
+      var player = this;
+      var isolating = e && e.ctrlKey;
+      var removing = e && e.shiftKey;
+
+      var modeMatches = removing || (isolating && mode == "isolate") || (!isolating && mode == "focus");
+
+      if(focusedPlayer == player.id && modeMatches){
+        setMode("even");
+        setPlayerButtons(null, null);
+        setPrimaryContainer(null);
+        focusedPlayer = null;
+      }
+      else if (isolating && !removing){
+        setMode("isolate");
+        setPlayerButtons(player.id, "isolate");
+        setPrimaryContainer(player.id);
+        focusedPlayer = player.id;
+        applyFocusAudio();
+      }
+      else if (!removing){
+        setMode("focus");
+        setPlayerButtons(player.id, "active");
+        setPrimaryContainer(player.id);
+        focusedPlayer = player.id;
+        applyFocusAudio();
+      }
+
+      if(removing){
+        removePlayer(player.id);
       }
     }
 
     var playerButtonContainer = document.getElementById("ct-settings-playerbuttons");
     players.forEach(player => {
       var button = document.createElement("button");
-      button.id = 'ct-playerbutton-' + player.index;
+      button.id = 'ct-playerbutton-' + player.id;
       button.append(document.createTextNode(player.channelName));
 
-      button.addEventListener('click', togglePrimary.bind(player), true);
+      button.addEventListener('click', playerHandler.bind(player), true);
       playerButtonContainer.append(button);
     });
 
-    togglePrimary.apply(players[0]);  // by default, focus the first stream
+    playerHandler.apply(players[0]);  // by default, focus the first stream
   }
 
   function init(){

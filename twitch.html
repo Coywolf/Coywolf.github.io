@@ -22,6 +22,9 @@
 <body>
 	<div id="ct-settings" class="ct-settings collapsed">
 		<div class="ct-settings-section">
+			<button id="ct-settings-bhelp">Help</button>
+		</div>
+		<div class="ct-settings-section">
 			<button id="ct-settings-bpin">Pin</button>
 		</div>
 
@@ -43,6 +46,24 @@
 	</div>
 	<div id="ct-player-container" class="ct-container">
 		<div class="ct-container-break"></div>
+	</div>
+
+	<div id="help-modal" class="help hidden">
+		<h1>Help</h1>
+		<hr/>
+		<p>The settings menu hides and shows on hover at the top of the screen, or you can use the <strong>Pin</strong> button to toggle leaving it visible</p>
+		<p>Channel names are parsed from the URL hash, e.g. <strong>#channel1/channel2/channel3/channel4</strong>. A maximum of four streams are supported</p>
+		<p>Use the <strong>Horizontal</strong> and <strong>Vertical</strong> buttons to toggle the layout to fit better depending on if you have a wider or taller screen</p>
+		<p>Setting Focus Audio to <strong>Yes</strong> will cause streams to mute/unmute as the focused stream changes</p>
+		<p>
+			<strong>Click</strong> the channel names to switch which stream is focused and given more space in the layout, indicated in green. <br/>
+			<strong>Click</strong> the already-focused stream to switch to an even layout. <br/>
+			<strong>CTRL+Click</strong> to isolate the selected stream, maximizing the stream and temporarily hiding the others, indicated in blue. <br/>
+			<strong>SHIFT+Click</strong> to remove the selected stream from the page.
+		</p>
+
+		<br/><br/>
+		<p>Click the <strong>Help</strong> button again or anywhere in this window to close it.</p>
 	</div>
 
   <script src= "https://player.twitch.tv/js/embed/v1.js"></script>

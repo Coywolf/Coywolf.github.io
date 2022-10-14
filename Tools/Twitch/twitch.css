@@ -41,6 +41,26 @@ body {
   display: inline;
 }
 
+.help {
+  width: 60vw;
+  height: 50vh;
+  position: absolute;
+  z-index: 99;
+  top: 15vh;
+  left: 20vw;
+  background-color: #9bb8ad;
+  padding: 15px;
+  border: black 5px solid;
+  border-radius: 10px;
+}
+.help.hidden {
+  display:none;
+}
+
+.help h1 {
+  text-align: center;
+}
+
 .ct-container {
   display: flex;
   width: 100%;
@@ -65,6 +85,10 @@ body {
 
 .ct-player-container.primary {
   order: 0;
+}
+
+.ct-container.isolate .ct-player-container:not(.primary){
+  display: none;
 }
 
 .ct-container-break {
@@ -174,8 +198,46 @@ body {
   /* border: 3px solid white; */
 }
 
-button.active {
-  background-color: #4BAC3F;
+
+
+.ct-settings button {
+  display: inline-block;
+  outline: 0;
+  cursor: pointer;
+  padding: 5px 16px;
+  font-size: 12x;
+  font-weight: 500;
+  line-height: 10px;
+  vertical-align: middle;
+  border: 1px solid;
+  border-radius: 6px;
+  color: #24292e;
+  background-color: #fafbfc;
+  border-color: #1b1f2326;
+  box-shadow: rgba(27, 31, 35, 0.04) 0px 1px 0px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px 0px inset;
+  transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1);
+  transition-property: color, background-color, border-color;
+}
+.ct-settings button:hover {
+  background-color: #dbdbdb;
+  border-color: #1b1f2326;
+  transition-duration: 0.1s;
+}
+
+.ct-settings button.active {  
+  color: #ffffff;
+  background-color: #2ea44f;
+}
+.ct-settings button.active:hover {
+  background-color: #2a8f46;
+}
+
+.ct-settings button.isolate {  
+  color: #ffffff;
+  background-color: #3b6bd4;
+}
+.ct-settings button.isolate:hover {
+  background-color: #2a4a8f;
 }
 
 #ct-player-0 {
