@@ -60,7 +60,7 @@
       }
       else{
         self.player.addEventListener(Twitch.Embed.VIDEO_READY, function(){
-          setMuted(isMuted);
+          self.setMuted(isMuted);
         }, {once: true});
       }
     }
@@ -75,7 +75,7 @@
       }
       else{
         self.player.addEventListener(Twitch.Embed.VIDEO_READY, function(){
-          setQuality(quality);
+          self.setQuality(quality);
         }, {once: true});
       }
     }
