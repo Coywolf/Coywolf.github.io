@@ -30,6 +30,7 @@
     var container = document.getElementById("ct-player-container");
     container.appendChild(self.playerContainerDiv);
 
+    var playerIsReady = false;  // if the player can accept commands, or if they need to be deferred
     if(layoutOnly){
       var playerText = document.createTextNode(self.channelName);
       
@@ -45,9 +46,46 @@
 
       self.player = new Twitch.Player(self.elementId, options);
       self.player.addEventListener(Twitch.Embed.VIDEO_READY, function(){
-        self.player.setQuality('chunked');
-        self.player.setMuted(index != 0);
+        playerIsReady = true;
       }, {once: true});    
+    }
+
+    self.setMuted = function(isMuted){
+      if(layoutOnly) return;
+      
+      if(playerIsReady){
+        if(self.player.getMuted() == isMuted) return;
+
+        self.player.setMuted(isMuted);
+      }
+      else{
+        self.player.addEventListener(Twitch.Embed.VIDEO_READY, function(){
+          setMuted(isMuted);
+        }, {once: true});
+      }
+    }
+
+    self.setQuality = function(quality){
+      if(layoutOnly) return;
+
+      if(playerIsReady){
+        if(self.player.getQuality() == quality) return;
+
+        self.player.setQuality(quality);
+      }
+      else{
+        self.player.addEventListener(Twitch.Embed.VIDEO_READY, function(){
+          setQuality(quality);
+        }, {once: true});
+      }
+    }
+
+    self.pause = function(){
+      if(layoutOnly) return;
+
+      if(playerIsReady){
+        self.player.pause();
+      }
     }
   }
 
@@ -192,9 +230,9 @@
     var settingsFocusYesButton = document.getElementById("ct-settings-byfoc");
 
     var applyFocusAudio = function(){
-      if((isAudioFocused || mode == "isolate") && !layoutOnly){
+      if(isAudioFocused || mode == "isolate"){
         players.forEach(p => {
-          p.player.setMuted(p.id != focusedPlayer);
+          p.setMuted(p.id != focusedPlayer);
         });
       }
     }
@@ -231,19 +269,17 @@
     var settingsQuality720Button = document.getElementById("ct-settings-b720");
 
     var applyFocusQuality = function(){
-      if(!layoutOnly){
-        players.forEach(p => {
-          if(focusedQuality == 'no' || p.id == focusedPlayer){
-            p.player.setQuality('chunked');
-          }
-          else if (focusedQuality == '480'){
-            p.player.setQuality('480p30');
-          }
-          else if (focusedQuality == '720'){
-            p.player.setQuality('720p60');
-          }
-        });
-      }
+      players.forEach(p => {
+        if(focusedQuality == 'no' || p.id == focusedPlayer){
+          p.setQuality('chunked');
+        }
+        else if (focusedQuality == '480'){
+          p.setQuality('480p30');
+        }
+        else if (focusedQuality == '720'){
+          p.setQuality('720p60');
+        }
+      });
     }
 
     var updateQualityButtonStyles = function(){
@@ -355,10 +391,7 @@
 
       if(playerIndex > -1){
         var p = players[playerIndex];
-
-        if(p.player){
-          p.player.pause();
-        }
+        p.pause();
 
         var playerButton = document.getElementById("ct-playerbutton-" + p.id);
         playerButton.remove();
@@ -381,6 +414,17 @@
       }
     }
 
+    var setFocusPlayer = function(player){
+      if(player){
+        focusedPlayer = player.id;
+        localStorage.setItem("last-focused", player.channelName);
+      }
+      else{
+        focusedPlayer = null;
+        localStorage.removeItem("last-focused");
+      }
+    }
+
     var playerHandler = function(e){
       var player = this;
       var isolating = e && e.ctrlKey;
@@ -392,13 +436,13 @@
         setMode("even");
         setPlayerButtons(null, null);
         setPrimaryContainer(null);
-        focusedPlayer = null;
+        setFocusPlayer();
       }
       else if (isolating && !removing){
         setMode("isolate");
         setPlayerButtons(player.id, "isolate");
         setPrimaryContainer(player.id);
-        focusedPlayer = player.id;
+        setFocusPlayer(player);
         applyFocusAudio();
         applyFocusQuality();
       }
@@ -406,7 +450,7 @@
         setMode("focus");
         setPlayerButtons(player.id, "active");
         setPrimaryContainer(player.id);
-        focusedPlayer = player.id;
+        setFocusPlayer(player);
         applyFocusAudio();
         applyFocusQuality();
       }
@@ -426,7 +470,18 @@
       playerButtonContainer.append(button);
     });
 
-    playerHandler.apply(players[0]);  // by default, focus the first stream
+    var lastFocus = localStorage.getItem("last-focused");
+    var lastFocusPlayer;
+    if(lastFocus){
+      lastFocusPlayer = players.find(p => p.channelName == lastFocus);
+    }
+
+    if(lastFocusPlayer){
+      playerHandler.apply(lastFocusPlayer);  // try to focus the user's last focused stream, in case they refreshed
+    }
+    else{
+      playerHandler.apply(players[0]);  // if they don't have one or it wasn't found, just focus the first
+    }
   }
 
   function init(){
