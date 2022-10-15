@@ -5,6 +5,7 @@
   var isSettingsPinned = false;
   var isLayoutHorizontal = true;
   var isAudioFocused = true;
+  var focusedQuality = 'no'; // no, 480, 720
   var focusedPlayer = null;
   var mode = '';  // focus, isolate, even
 
@@ -138,6 +139,15 @@
     // focus audio
     var settingsFocusNoButton = document.getElementById("ct-settings-bnfoc");
     var settingsFocusYesButton = document.getElementById("ct-settings-byfoc");
+
+    var applyFocusAudio = function(){
+      if((isAudioFocused || mode == "isolate") && !layoutOnly){
+        players.forEach(p => {
+          p.player.setMuted(p.id != focusedPlayer);
+        });
+      }
+    }
+
     var updateAudioButtonStyles = function(){
       if(isAudioFocused){
         settingsFocusNoButton.classList.remove("active");
@@ -155,16 +165,66 @@
     settingsFocusYesButton.addEventListener('click', function(e){
       isAudioFocused = true;
       updateAudioButtonStyles();
+      applyFocusAudio();
     });
     updateAudioButtonStyles();  // init the buttons for the default setting
 
-    var applyFocusAudio = function(){
-      if((isAudioFocused || mode == "isolate") && !layoutOnly){
+    
+
+    // focus quality
+    var settingsQualityNoButton = document.getElementById("ct-settings-bnqua");
+    var settingsQuality480Button = document.getElementById("ct-settings-b480");
+    var settingsQuality720Button = document.getElementById("ct-settings-b720");
+
+    var applyFocusQuality = function(){
+      if(!layoutOnly){
         players.forEach(p => {
-          p.player.setMuted(p.id != focusedPlayer);
+          if(focusedQuality == 'no' || p.id == focusedPlayer){
+            p.player.setQuality('chunked');
+          }
+          else if (focusedQuality == '480'){
+            p.player.setQuality('480p30');
+          }
+          else if (focusedQuality == '720'){
+            p.player.setQuality('720p60');
+          }
         });
       }
     }
+
+    var updateQualityButtonStyles = function(){
+      if(focusedQuality == 'no'){
+        settingsQuality480Button.classList.remove("active");
+        settingsQuality720Button.classList.remove("active");
+        settingsQualityNoButton.classList.add("active");
+      }
+      else if (focusedQuality == '480'){
+        settingsQualityNoButton.classList.remove("active");
+        settingsQuality720Button.classList.remove("active");
+        settingsQuality480Button.classList.add("active");
+      }
+      else{
+        settingsQualityNoButton.classList.remove("active");
+        settingsQuality480Button.classList.remove("active");
+        settingsQuality720Button.classList.add("active");
+      }
+    }
+    settingsQualityNoButton.addEventListener('click', function(e){
+      focusedQuality = 'no';
+      updateQualityButtonStyles();
+      applyFocusQuality();
+    });
+    settingsQuality480Button.addEventListener('click', function(e){
+      focusedQuality = '480';
+      updateQualityButtonStyles();
+      applyFocusQuality();
+    });
+    settingsQuality720Button.addEventListener('click', function(e){
+      focusedQuality = '720';
+      updateQualityButtonStyles();
+      applyFocusQuality();
+    });
+    updateQualityButtonStyles();
 
     // players
     var setMode = function(newMode){

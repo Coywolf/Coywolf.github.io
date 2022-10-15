@@ -40,6 +40,13 @@
 			<button id="ct-settings-byfoc">Yes</button>
 		</div>
 
+		<div class="ct-settings-section">
+			<span>Focus Quality</span>
+			<button id="ct-settings-bnqua">No</button>
+			<button id="ct-settings-b480">480p</button>
+			<button id="ct-settings-b720">720p</button>
+		</div>
+
 		<div id="ct-settings-playerbuttons" class="ct-settings-section">
 			<span>Focus Stream</span>
 		</div>
@@ -54,7 +61,12 @@
 		<p>The settings menu hides and shows on hover at the top of the screen, or you can use the <strong>Pin</strong> button to toggle leaving it visible</p>
 		<p>Channel names are parsed from the URL hash, e.g. <strong>#channel1/channel2/channel3/channel4</strong>. A maximum of four streams are supported</p>
 		<p>Use the <strong>Horizontal</strong> and <strong>Vertical</strong> buttons to toggle the layout to fit better depending on if you have a wider or taller screen</p>
-		<p>Setting Focus Audio to <strong>Yes</strong> will cause streams to mute/unmute as the focused stream changes</p>
+		<p>Setting Focus Audio to <strong>Yes</strong> will cause streams to mute/unmute as the focused stream changes. Isolating a stream will focus the audio regardless of this setting</p>
+		<p>
+			Streams are set to Source quality by default
+			Setting Focus Quality to <strong>480p</strong> or <strong>720p</strong> will cause the focused stream to switch to Source quality, and all others will be set to the chosen quality
+			Not all streams support all qualities, if the selected quality isn't an option than it won't be changed on that stream
+		</p>
 		<p>
 			<strong>Click</strong> the channel names to switch which stream is focused and given more space in the layout, indicated in green. <br/>
 			<strong>Click</strong> the already-focused stream to switch to an even layout. <br/>
