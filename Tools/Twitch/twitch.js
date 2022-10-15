@@ -6,6 +6,7 @@
   var isLayoutHorizontal = true;
   var isAudioFocused = true;
   var focusedQuality = 'no'; // no, 480, 720
+
   var focusedPlayer = null;
   var mode = '';  // focus, isolate, even
 
@@ -60,7 +61,50 @@
     return tokens.slice(0, 4);
   }
 
+  function saveSettings(){
+    localStorage.setItem("settings-pinned", isSettingsPinned);
+    localStorage.setItem("settings-layout", isLayoutHorizontal);
+    localStorage.setItem("settings-audio", isAudioFocused);
+    localStorage.setItem("settings-quality", focusedQuality);
+  }
+
+  function loadSettings(){
+    var pinSetting = localStorage.getItem("settings-pinned");
+    if(pinSetting === null){  // default
+      isSettingsPinned = false;
+    }
+    else{
+      isSettingsPinned = (pinSetting === "true");
+    }
+
+    var layoutSetting = localStorage.getItem("settings-layout");
+    if(layoutSetting === null){  // default
+      isLayoutHorizontal = true;
+    }
+    else{
+      isLayoutHorizontal = (layoutSetting === "true");
+    }
+
+    var audioSetting = localStorage.getItem("settings-audio");
+    if(audioSetting === null){  // default
+      isAudioFocused = true;
+    }
+    else{
+      isAudioFocused = (audioSetting === "true");
+    }
+
+    var qualitySetting = localStorage.getItem("settings-quality");
+    if(qualitySetting === null){  // default
+      focusedQuality = 'no';
+    }
+    else{
+      focusedQuality = qualitySetting;
+    }
+  }
+
   function initSettings(){
+    loadSettings(); // load from local storage or set to defaults
+
     var settings = document.getElementById("ct-settings");
     settings.addEventListener('mouseenter', function(e){
       if(!isSettingsPinned){
@@ -93,18 +137,23 @@
 
     // pin
     var settingsPinButton = document.getElementById("ct-settings-bpin");
-    settingsPinButton.addEventListener('click', function(e){
-      isSettingsPinned = !isSettingsPinned;
-
+    var applyPin = function(){
       if(isSettingsPinned){
         settingsPinButton.classList.add("active");
         settings.classList.add("pinned");
+        settings.classList.remove('collapsed');
       }
       else{
         settingsPinButton.classList.remove("active");
         settings.classList.remove("pinned");
       }
+    }
+    settingsPinButton.addEventListener('click', function(e){
+      isSettingsPinned = !isSettingsPinned;      
+      applyPin();
+      saveSettings();
     });
+    applyPin(); // init button and style for the initial setting
 
     // layout
     var settingsHorizontalButton = document.getElementById("ct-settings-bhorz");
@@ -129,12 +178,14 @@
     settingsHorizontalButton.addEventListener('click', function(e){
       isLayoutHorizontal = true;
       applyLayoutButtonChange();
+      saveSettings();
     });
     settingsVerticalButton.addEventListener('click', function(e){
       isLayoutHorizontal = false;
       applyLayoutButtonChange();
+      saveSettings();
     });
-    applyLayoutButtonChange();  // init the buttons for the default setting
+    applyLayoutButtonChange();  // init the buttons and styles for the initial setting
 
     // focus audio
     var settingsFocusNoButton = document.getElementById("ct-settings-bnfoc");
@@ -161,13 +212,16 @@
     settingsFocusNoButton.addEventListener('click', function(e){
       isAudioFocused = false;
       updateAudioButtonStyles();
+      saveSettings();
     });
     settingsFocusYesButton.addEventListener('click', function(e){
       isAudioFocused = true;
       updateAudioButtonStyles();
       applyFocusAudio();
+      saveSettings();
     });
-    updateAudioButtonStyles();  // init the buttons for the default setting
+    updateAudioButtonStyles();  // init the buttons for the initial setting
+    applyFocusAudio();  // apply audio focus for the initial setting
 
     
 
@@ -213,18 +267,22 @@
       focusedQuality = 'no';
       updateQualityButtonStyles();
       applyFocusQuality();
+      saveSettings();
     });
     settingsQuality480Button.addEventListener('click', function(e){
       focusedQuality = '480';
       updateQualityButtonStyles();
       applyFocusQuality();
+      saveSettings();
     });
     settingsQuality720Button.addEventListener('click', function(e){
       focusedQuality = '720';
       updateQualityButtonStyles();
       applyFocusQuality();
+      saveSettings();
     });
-    updateQualityButtonStyles();
+    updateQualityButtonStyles();  // init button styles and quality mode for the initial setting
+    applyFocusQuality(); 
 
     // players
     var setMode = function(newMode){
@@ -342,6 +400,7 @@
         setPrimaryContainer(player.id);
         focusedPlayer = player.id;
         applyFocusAudio();
+        applyFocusQuality();
       }
       else if (!removing){
         setMode("focus");
@@ -349,6 +408,7 @@
         setPrimaryContainer(player.id);
         focusedPlayer = player.id;
         applyFocusAudio();
+        applyFocusQuality();
       }
 
       if(removing){
