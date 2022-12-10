@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-115047347-1"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'UA-115047347-1');
+	</script>
+
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="Tools/TalentDiff/talent_diff.css"/>
+	<title>Talent Diff</title>
+</head>	
+<body>
+	<input id="talent-string-original" type="text" placeholder="Original" />
+	<input id="talent-string-new" type="text" placeholder="New" />
+	<button id="compute">Compute Diff</button>
+
+	<script src="Tools/TalentDiff/talent_diff.js"></script>
+	<script src="https://nether.wowhead.com/data/talents-dragonflight"></script>
+</body>
+</html>
