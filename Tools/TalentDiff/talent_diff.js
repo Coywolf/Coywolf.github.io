@@ -49,11 +49,12 @@ WH.setPageData("specs", {
   const hashCharList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";  // replaces +/ with -_ to make it url safe
   const bitsPerChar = 6;
 
-  const highlightSimilarities = false;
+  const highlightSimilarities = false;  // was doing this to test, all the nodes that are the same are just white, but I don't really like it, it's too much. maybe make it optional one day idk
 
   var originalInput = document.getElementById("talent-string-original");
   var newInput = document.getElementById("talent-string-new");
   var runBtn = document.getElementById("compute");
+  var errorText = document.getElementById("error-text");
 
   var talentStringParser = function(talentString){
     var self = this;
@@ -131,7 +132,7 @@ WH.setPageData("specs", {
         let keys = Object.keys(tree.talents);
         for(let i = 0; i < keys.length; i++){
           let talent = tree.talents[keys[i]][0];
-          nodeMap[talent.node] = {cell: talent.cell, isSpecTree: isSpecTree};
+          nodeMap[talent.node] = {cell: talent.cell, isSpecTree: isSpecTree, spellName: talent.spells[0].name};
         }
       }
       
@@ -196,6 +197,7 @@ WH.setPageData("specs", {
           // expected to not find anything for half the nodes, as those will be the other spec trees that aren't used
           if(nodeMapRecord){
             node.cell = nodeMapRecord.cell;
+            node.spellName = nodeMapRecord.spellName;
             node.isSpecTree = nodeMapRecord.isSpecTree;
           }
         }
@@ -334,7 +336,8 @@ WH.setPageData("specs", {
       
       let lastCell = -1;
       for(let i = 0; i < nodes.length; i++){
-        // every cell is encoded as the difference between it and the previous cell, helps to keep the numbers small so usually fewer characters needed in the hash
+        // cells are encoded as the difference between it and the previous cell, if that difference is under 32 to save characters in the hash (don't really understand since this could be done up to 64, bug on their part?)
+        // otherwise it's just encoded as the full next cell number
         let cellDelta = nodes[i].cell - lastCell - 1;
         if(cellDelta < halfPage){
           // can just encode as a single character
@@ -342,7 +345,7 @@ WH.setPageData("specs", {
         }
         else{
           // need to encode as two base64 characters, same as above
-          toEncode.push(cellDelta >> bitsPerChar & bitMask | halfPage, cellDelta & bitMask);
+          toEncode.push(nodes[i].cell >> bitsPerChar & bitMask | halfPage, nodes[i].cell & bitMask);
         }
         lastCell = nodes[i].cell;
         
@@ -366,20 +369,46 @@ WH.setPageData("specs", {
   }
 
   function computeDiff(){
-    // todo: validate wowhead data was loaded
+    errorText.innerHTML = "";
+
+    if(!WH["wow.talentCalcDragonflight.live.trees"] || !WH["wow.talentCalcDragonflight.live.nodes"]){
+      errorText.innerHTML = "Failed to load Wowhead spec data";
+      return;
+    }
 
     var originalTalentString = originalInput.value;
+    var newTalentString = newInput.value;
+    if(!originalTalentString || !newTalentString){
+      errorText.innerHTML = "You must enter both an original and new import string";
+      return;
+    }
+
     var originalParser = new talentStringParser(originalTalentString);
     var originalNodes = originalParser.getNodes();
-
-    var newTalentString = newInput.value;
+    
     var newParser = new talentStringParser(newTalentString);
     var newNodes = newParser.getNodes();
 
-    // todo: validate spec records found
-    // todo: validate versions match
-    // todo: validate specs match
-    // todo: validate loaded node count matches
+    if(!originalParser.specRecord){
+      errorText.innerHTML = "Unable to find the spec record for the original import string";
+      return;
+    }
+    if(!newParser.specRecord){
+      errorText.innerHTML = "Unable to find the spec record for the new import string";
+      return;
+    }
+    if(originalParser.version != newParser.version){
+      errorText.innerHTML = `The import strings are for two different versions of the import; they must match (${originalParser.version} vs ${newParser.version})`;
+      return;
+    }
+    if(originalParser.specId != newParser.specId){
+      errorText.innerHTML = `The import strings are for two different specializations; they must match (${originalParser.specId} vs ${newParser.specId})`;
+      return;
+    }
+    // if(originalNodes.length != newNodes.length){
+    //   errorText.innerHTML = `Parsed a different number of nodes from the two import strings, most likely they are incomplete pastes (${originalNodes.length} vs ${newNodes.length})`;
+    //   return;
+    // }
 
     calculateDifferences(originalNodes, newNodes);
 

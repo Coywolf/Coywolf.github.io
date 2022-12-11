@@ -16,9 +16,18 @@
 	<title>Talent Diff</title>
 </head>	
 <body>
-	<input id="talent-string-original" type="text" placeholder="Original" />
-	<input id="talent-string-new" type="text" placeholder="New" />
-	<button id="compute">Compute Diff</button>
+	<div class="container">
+		<h3>1. Paste the import string of the original talent tree</h3>
+		<textarea id="talent-string-original" type="text" rows="3"></textarea>
+
+		<h3>2. Paste the import string of the new talent tree</h3>
+		<textarea id="talent-string-new" type="text" rows="3"></textarea>
+
+		<h3>3. Click to generate an annotated talent calculator showing the differences from the original to the new</h3>
+		<button id="compute">Generate Diff</button>
+
+		<h3 id="error-text" class="error"></h3>
+	</div>
 
 	<script src="Tools/TalentDiff/talent_diff.js"></script>
 	<script src="https://nether.wowhead.com/data/talents-dragonflight"></script>

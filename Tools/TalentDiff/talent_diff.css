@@ -1,3 +1,33 @@
 body {
   background-color: #272f2c;
+  display: flex;  
+  justify-content: center;
+  padding-top: 10vh;
+}
+
+.container {
+  width: 50vw;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: #BABABA;
+}
+
+textarea {
+  width: 100%
+}
+
+button {
+  padding: 15px;
+  width: 10vw;
+  border-radius: 10px;
+  background-color: #98c2b2;
+}
+
+h3 {
+  margin-bottom: -10px;
+}
+
+.error {
+  color: #df5630;
 }
