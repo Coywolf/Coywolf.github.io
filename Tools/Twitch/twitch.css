@@ -41,6 +41,10 @@ body {
   display: inline;
 }
 
+.hidden {
+  display:none !important;
+}
+
 .help {
   width: 60vw;
   height: 50vh;
@@ -53,12 +57,47 @@ body {
   border: black 5px solid;
   border-radius: 10px;
 }
-.help.hidden {
-  display:none;
-}
 
 .help h1 {
   text-align: center;
+}
+
+.search {
+  height: 75vh;
+  width: 20vw;
+  position: absolute;
+  top: 80px;
+  left: 0;
+  background-color: #181d1b;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 5px;
+}
+
+.search .error {
+  color: #f09098;
+  text-align: center;
+  background-color: #4a1317;
+  padding: 5px;
+  margin: 10px 2vw;
+  border-radius: 10px;
+}
+
+.search .auth {
+  color: #9146FF;
+  text-align: center;
+}
+
+.search .auth button {
+  background-color: #9146FF;
+  border-style: solid;
+  border-color: black;
+  padding: 5px 15px;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 .ct-container {

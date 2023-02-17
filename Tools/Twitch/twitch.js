@@ -1,5 +1,22 @@
 (function() {
   var layoutOnly = location.host != 'coywolf.github.io';
+  const clientId = "raya5nefmd441ipqcg8xo1j0mnnv6x";
+  var accessToken = "";
+  var accessTokenValidationInterval;
+
+  // #region local storage keys
+  const SETTINGS_PINNED = "settings-pinned";
+  const SETTINGS_LAYOUT = "settings-layout";
+  const SETTINGS_AUDIO = "settings-audio";
+  const SETTINGS_QUALITY = "settings-quality";
+  const LAST_FOCUSED = "last-focused";
+  const AUTH_TOKEN = "twitch-access-token";
+  const AUTH_STATE = "twitch-access-state";
+  const STREAMS_TEMP = "streams-temp";
+  // #endregion
+
+  // https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow
+  // https://dev.twitch.tv/docs/api/reference/#get-streams    
 
   // settings
   var isSettingsPinned = false;
@@ -89,25 +106,35 @@
     }
   }
 
+  function uuid() {
+    const url = URL.createObjectURL(new Blob());
+    const [id] = url.toString().replaceAll("-", "").split('/').reverse();
+    URL.revokeObjectURL(url);
+    return id;
+  }
+
   function parseStreamNames(path){
     if(path.startsWith('#')){
       path = path.substring(1);
     }
 
-    var tokens = path.split('/');
-    
+    if(path.length == 0){
+      return [];
+    }
+
+    var tokens = path.split('/');    
     return tokens.slice(0, 4);
   }
 
   function saveSettings(){
-    localStorage.setItem("settings-pinned", isSettingsPinned);
-    localStorage.setItem("settings-layout", isLayoutHorizontal);
-    localStorage.setItem("settings-audio", isAudioFocused);
-    localStorage.setItem("settings-quality", focusedQuality);
+    localStorage.setItem(SETTINGS_PINNED, isSettingsPinned);
+    localStorage.setItem(SETTINGS_LAYOUT, isLayoutHorizontal);
+    localStorage.setItem(SETTINGS_AUDIO, isAudioFocused);
+    localStorage.setItem(SETTINGS_QUALITY, focusedQuality);
   }
 
   function loadSettings(){
-    var pinSetting = localStorage.getItem("settings-pinned");
+    var pinSetting = localStorage.getItem(SETTINGS_PINNED);
     if(pinSetting === null){  // default
       isSettingsPinned = false;
     }
@@ -115,7 +142,7 @@
       isSettingsPinned = (pinSetting === "true");
     }
 
-    var layoutSetting = localStorage.getItem("settings-layout");
+    var layoutSetting = localStorage.getItem(SETTINGS_LAYOUT);
     if(layoutSetting === null){  // default
       isLayoutHorizontal = true;
     }
@@ -123,7 +150,7 @@
       isLayoutHorizontal = (layoutSetting === "true");
     }
 
-    var audioSetting = localStorage.getItem("settings-audio");
+    var audioSetting = localStorage.getItem(SETTINGS_AUDIO);
     if(audioSetting === null){  // default
       isAudioFocused = true;
     }
@@ -131,13 +158,175 @@
       isAudioFocused = (audioSetting === "true");
     }
 
-    var qualitySetting = localStorage.getItem("settings-quality");
+    var qualitySetting = localStorage.getItem(SETTINGS_QUALITY);
     if(qualitySetting === null){  // default
       focusedQuality = 'no';
     }
     else{
       focusedQuality = qualitySetting;
     }
+  }
+
+  function updateSearchVisibility(authed){
+    if(authed){
+      var disconnectedBox = document.getElementById("ct-search-auth-disconnected");
+      var connectedBox = document.getElementById("ct-search-auth-connected");
+      var controlsBox = document.getElementById("ct-search-controls");
+      disconnectedBox.classList.add("hidden");
+      connectedBox.classList.remove("hidden");
+      controlsBox.classList.remove("hidden");
+    }
+    else{
+      var disconnectedBox = document.getElementById("ct-search-auth-disconnected");
+      var connectedBox = document.getElementById("ct-search-auth-connected");
+      var controlsBox = document.getElementById("ct-search-controls");
+      disconnectedBox.classList.remove("hidden");
+      connectedBox.classList.add("hidden");
+      controlsBox.classList.add("hidden");
+    }
+  }  
+
+  function setError(message){
+    var authErrorBox = document.getElementById("ct-search-errors");
+
+    if(message){      
+      authErrorBox.innerText = message;
+      authErrorBox.classList.remove("hidden");
+    }
+    else{
+      authErrorBox.innerText = "";
+      authErrorBox.classList.add("hidden");
+    }
+  }
+
+  function twitchAuthorize(){
+    var hash = location.hash;
+    if(hash.startsWith('#')){
+      hash = hash.substring(1);
+    }
+
+    var state = uuid();
+
+    localStorage.setItem(STREAMS_TEMP, hash);
+    localStorage.setItem(AUTH_STATE, state);
+
+    var authUrl = "https://id.twitch.tv/oauth2/authorize" +
+      "?response_type=token" +
+      "&client_id=" + clientId +
+      "&redirect_uri=" + (location.origin+location.pathname) +
+      "&scope=" +
+      "&state=" + state;
+    window.location.replace(authUrl);
+  }
+  
+  function startTokenValidation(){
+    // https://dev.twitch.tv/docs/authentication/validate-tokens/
+    const delay = 1000 * 60 * 60; // 1000 ms * 60 s * 60 m = every 1 hour
+
+    var callback = function(){
+      console.log("Validating access token");
+      if(accessToken){
+        fetch("https://id.twitch.tv/oauth2/validate", {
+          headers: {
+            "Authorization": "OAuth " + accessToken
+          }
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          var invalidToken = data.status && data.status == "401";
+          var expiresSoon = data.expires_in && data.expires_in < delay;
+
+          if(invalidToken || expiresSoon){
+            if(invalidToken) accessToken = "";  // if token is actually expired now, clear it first so that the unauth method won't bother trying to revoke it
+
+            twitchUnauthorize();
+            setError("Access token has expired, connect with Twitch again to use search features");
+          }
+        });        
+      }
+      else{
+        // no access token..how are we here? stop the interval
+        clearInterval(accessTokenValidationInterval);
+      }
+    }
+
+    accessTokenValidationInterval = setInterval(callback, delay);
+    callback(); // first interval callback happens after the delay, need to also run once to start with
+  }
+
+  function twitchUnauthorize(){
+    if(accessToken){
+      // https://dev.twitch.tv/docs/authentication/revoke-tokens/
+      fetch("https://id.twitch.tv/oauth2/revoke", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          'client_id': clientId,
+          'token': accessToken
+        })
+      });
+    }
+
+    accessToken = "";
+    localStorage.removeItem(AUTH_TOKEN);
+    if(accessTokenValidationInterval) clearInterval(accessTokenValidationInterval);    
+        
+    updateSearchVisibility(false);
+  }
+
+  // figure out what's in the hash and handle it accordingly. could be an auth redirect, could be a list of streams
+  // returns { streams:"", error:"", token:""}
+  function handleHash(hash){
+    if(hash === null || hash === undefined) return {};
+    if(hash.startsWith('#') || hash.startsWith('?')){
+      hash = hash.substring(1);
+    }
+
+    // hash is expected to be one of the following
+    // (empty)
+    // stream1/stream2/stream3/stream4
+    // access_token=73d0f8mkabpbmjp921asv2jaidwxn&scope=channel%3Amanage%3Apolls+channel%3Aread%3Apolls&state=c3ab8aa609ea11e793ae92361f002671&token_type=bearer
+    // error=access_denied&error_description=The+user+denied+you+access&state=c3ab8aa609ea11e793ae92361f002671
+
+    var parameters = hash
+      .split("&")
+      .map(t => t.split("="))
+      .reduce( (pre, [key, value]) => ({...pre, [key]: value}), {});
+    
+    var ret = {};
+    if(parameters.state){
+      var savedState = localStorage.getItem(AUTH_STATE)
+      localStorage.removeItem(AUTH_STATE);
+
+      // test that the twitch redirect includes a state matching the one generated previously
+      if(parameters.state == savedState){
+        if(parameters.error){
+          ret.error = (parameters.error_description || parameters.error).toString().replaceAll("+", " ");
+        }
+        else if(parameters.access_token){
+          ret.token = parameters.access_token;
+          localStorage.setItem(AUTH_TOKEN, parameters.access_token);
+        }
+        else{
+          ret.error = "Unexpected response from Twitch";
+        }
+      }
+      else{
+        ret.error = "Invalid redirect state";
+      }
+
+      ret.streams = localStorage.getItem(STREAMS_TEMP);
+      localStorage.removeItem(STREAMS_TEMP);
+    }
+    else{
+      ret.streams = hash;
+      ret.token = localStorage.getItem(AUTH_TOKEN);
+    }
+
+    return ret;
   }
 
   function initSettings(){
@@ -154,6 +343,27 @@
         settings.classList.add('collapsed');
       }
     });
+
+    // search
+    var settingsSearchButton = document.getElementById("ct-settings-search");
+    var searchPanel = document.getElementById("ct-search-panel");
+    settingsSearchButton.addEventListener('click', function(e){
+      if(searchPanel.classList.contains("hidden")){
+        searchPanel.classList.remove("hidden");
+        settingsSearchButton.classList.add("active");
+      }
+      else{
+        searchPanel.classList.add("hidden");
+        settingsSearchButton.classList.remove("active");
+      }
+    });
+    if(players.length == 0) settingsSearchButton.click();
+
+    //auth/unauth buttons
+    var authButton = document.getElementById("ct-search-bauth");
+    authButton.addEventListener("click", twitchAuthorize);
+    var unauthButton = document.getElementById("ct-search-bunauth");
+    unauthButton.addEventListener("click", twitchUnauthorize);
 
     // help
     var settingsHelpButton = document.getElementById("ct-settings-bhelp");
@@ -417,11 +627,11 @@
     var setFocusPlayer = function(player){
       if(player){
         focusedPlayer = player.id;
-        localStorage.setItem("last-focused", player.channelName);
+        localStorage.setItem(LAST_FOCUSED, player.channelName);
       }
       else{
         focusedPlayer = null;
-        localStorage.removeItem("last-focused");
+        localStorage.removeItem(LAST_FOCUSED);
       }
     }
 
@@ -470,7 +680,7 @@
       playerButtonContainer.append(button);
     });
 
-    var lastFocus = localStorage.getItem("last-focused");
+    var lastFocus = localStorage.getItem(LAST_FOCUSED);
     var lastFocusPlayer;
     if(lastFocus){
       lastFocusPlayer = players.find(p => p.channelName == lastFocus);
@@ -485,7 +695,22 @@
   }
 
   function init(){
-    var streams = parseStreamNames(location.hash);
+    // annoyingly, errors come back in the search, successes in the hash
+    var hashOutcome = handleHash(location.search || location.hash);
+
+    if(hashOutcome.error){
+      setError(hashOutcome.error);
+    }
+    if(hashOutcome.token){
+      accessToken = hashOutcome.token;
+      startTokenValidation();
+      updateSearchVisibility(true);
+    }
+
+    var streamNames = hashOutcome.streams || "";
+    window.history.replaceState(null, null, window.location.pathname)
+    location.hash = streamNames;
+    var streams = parseStreamNames(hashOutcome.streams || "");
     
     players = streams.map((c, i) => new PlayerModel(c, i));
     var container = document.getElementById("ct-player-container");
