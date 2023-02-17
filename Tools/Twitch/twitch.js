@@ -1,8 +1,6 @@
 (function() {
   var layoutOnly = location.host != 'coywolf.github.io';
   const clientId = "raya5nefmd441ipqcg8xo1j0mnnv6x";
-  var accessToken = "";
-  var accessTokenValidationInterval;
 
   // #region local storage keys
   const SETTINGS_PINNED = "settings-pinned";
@@ -28,6 +26,9 @@
   var mode = '';  // focus, isolate, even
 
   var players = [];
+  var playerHandler;
+
+  var searchModel;
 
   var PlayerModel = function(channel, index){
     var self = this;
@@ -67,6 +68,17 @@
       }, {once: true});    
     }
 
+    self.makePlayerButton = function(){
+      var playerButtonContainer = document.getElementById("ct-settings-playerbuttons");
+
+      var button = document.createElement("button");
+      button.id = 'ct-playerbutton-' + self.id;
+      button.append(document.createTextNode(self.channelName));
+
+      button.addEventListener('click', playerHandler.bind(self), true);
+      playerButtonContainer.append(button);
+    }
+
     self.setMuted = function(isMuted){
       if(layoutOnly) return;
       
@@ -104,6 +116,264 @@
         self.player.pause();
       }
     }
+  }
+
+  var StreamResultModel = function(result){
+    var self = this;
+
+    self.id = result.user_id;
+    self.name = result.user_name;
+    self.title = result.title;
+    self.viewerCount = result.viewer_count + ' viewers';
+
+    self.iconUrl = ko.observable("");
+  }
+
+  // view model for the search panel
+  var SearchModel = function(){
+    var self = this;
+
+    // just hard coding the data for categories to show by default, searching will replace these
+    var defaultCategories = [
+      {
+        "id": "504461",
+        "name": "Super Smash Bros. Ultimate",
+        "box_art_url": "https://static-cdn.jtvnw.net/ttv-boxart/504461_IGDB-52x72.jpg"
+      },
+      {
+        "id": "16282",
+        "name": "Super Smash Bros. Melee",
+        "box_art_url": "https://static-cdn.jtvnw.net/ttv-boxart/16282_IGDB-52x72.jpg"
+      },
+      {
+        "id": "18122",
+        "name": "World of Warcraft",
+        "box_art_url": "https://static-cdn.jtvnw.net/ttv-boxart/18122-52x72.jpg"
+      }
+    ]
+
+    self.accessToken = ko.observable();
+    self.accessTokenValidationInterval;
+    self.errorMessage = ko.observable("");
+
+    self.categoryQuery = ko.observable("").extend({ rateLimit: { timeout: 400, method: "notifyWhenChangesStop" } });
+    self.categoryResults = ko.observableArray(defaultCategories);
+    self.category = ko.observable();
+    self.streamQuery = ko.observable("").extend({ rateLimit: { timeout: 400, method: "notifyWhenChangesStop" } });
+    self.streamResults = ko.observableArray();
+    self.filteredStreamResults = ko.pureComputed(() => {
+      var query = self.streamQuery();
+
+      if(query){
+        query = query.toLowerCase();
+        return self.streamResults().filter(s => {
+          return s.name.toLowerCase().includes(query) || s.title.toLowerCase().includes(query);
+        });
+      }
+      else{
+        return self.streamResults();
+      }
+    });
+
+    self.twitchAuthorize = function(){
+      var hash = location.hash;
+      if(hash.startsWith('#')){
+        hash = hash.substring(1);
+      }
+  
+      var state = uuid();
+  
+      localStorage.setItem(STREAMS_TEMP, hash);
+      localStorage.setItem(AUTH_STATE, state);
+  
+      var authUrl = "https://id.twitch.tv/oauth2/authorize" +
+        "?response_type=token" +
+        "&client_id=" + clientId +
+        "&redirect_uri=" + (location.origin+location.pathname) +
+        "&scope=" +
+        "&state=" + state;
+      window.location.replace(authUrl);
+    }
+
+    self.twitchUnauthorize = function(){
+      if(self.accessToken()){
+        // https://dev.twitch.tv/docs/authentication/revoke-tokens/
+        fetch("https://id.twitch.tv/oauth2/revoke", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({
+            'client_id': clientId,
+            'token': self.accessToken()
+          })
+        });
+      }
+  
+      self.accessToken("");
+      localStorage.removeItem(AUTH_TOKEN);
+      if(self.accessTokenValidationInterval) clearInterval(self.accessTokenValidationInterval); 
+    }
+
+    function startTokenValidation(){
+      // https://dev.twitch.tv/docs/authentication/validate-tokens/
+      const delay = 1000 * 60 * 60; // 1000 ms * 60 s * 60 m = every 1 hour
+  
+      var callback = function(){
+        console.log("Validating access token");
+        if(self.accessToken()){
+          fetch("https://id.twitch.tv/oauth2/validate", {
+            headers: {
+              "Authorization": "OAuth " + self.accessToken()
+            }
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            var invalidToken = data.status && data.status == "401";
+            var expiresSoon = data.expires_in && data.expires_in < delay;
+  
+            if(invalidToken || expiresSoon){
+              if(invalidToken) self.accessToken("");  // if token is actually expired now, clear it first so that the unauth method won't bother trying to revoke it
+  
+              twitchUnauthorize();
+              setError("Access token has expired, connect with Twitch again to use search features");
+            }
+          });        
+        }
+        else{
+          // no access token..how are we here? stop the interval
+          clearInterval(self.accessTokenValidationInterval);
+        }
+      }
+  
+      self.accessTokenValidationInterval = setInterval(callback, delay);
+      callback(); // first interval callback happens after the delay, need to also run once to start with
+    }
+
+    self.clearCategory = function(){
+      self.category(null);
+    }
+
+    function processStreamResults(results){
+      self.streamResults(results.map(r => new StreamResultModel(r)));
+
+      // look up user icons
+      // https://dev.twitch.tv/docs/api/reference/#get-users
+
+      var map = {};
+      for(var s of self.streamResults()){
+        map[s.id] = s;
+      }
+      var query = Object.keys(map).map(i => 'id=' + i).join('&');
+      var getUsersUrl = "https://api.twitch.tv/helix/users?" + query;
+
+      fetch(getUsersUrl, {
+        headers: {
+          "Authorization": "Bearer " + self.accessToken(),
+          "Client-Id": clientId
+        }
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        var results = data.data;
+        
+        if(results){
+          for(var r of results){
+            map[r.id].iconUrl(r.profile_image_url);
+          }
+        }
+      });
+    }
+
+    self.addStream = function(stream){
+      if(players.length < 4){
+        var newId = players.length > 0 ? Math.max(...players.map(p => p.id)) + 1 : 0;
+        var newPlayer = new PlayerModel(stream.name, newId);
+        players.push(newPlayer);
+        newPlayer.makePlayerButton();
+
+        var container = document.getElementById("ct-player-container");
+        container.classList.remove("ct-playercount-" + (players.length-1));
+        container.classList.add("ct-playercount-" + players.length);
+
+        // if this is the only stream, focus it
+        if(players.length == 1){
+          playerHandler.apply(newPlayer);
+        }
+
+        var newHash = "#" + players.map(p => p.channelName).join("/");
+        location.hash = newHash;
+      }
+    }
+
+    self.accessToken.subscribe(nv => {
+      if(nv){
+        startTokenValidation();
+      }
+    });
+
+    self.categoryQuery.subscribe(nv => {
+      if(nv){
+        // https://dev.twitch.tv/docs/api/reference/#search-categories
+
+        var categorySearchUrl = "https://api.twitch.tv/helix/search/categories?" + new URLSearchParams({
+          query: nv
+        }).toString();
+
+        fetch(categorySearchUrl, {
+          headers: {
+            "Authorization": "Bearer " + self.accessToken(),
+            "Client-Id": clientId
+          }
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          var results = data.data;
+          if(results){
+            self.categoryResults(results);
+          }
+          else{
+            self.categoryResults([]);
+          }
+        });
+      }
+      else{
+        self.categoryResults(defaultCategories);
+      }
+    });
+
+    self.category.subscribe(nv => {
+      if(nv){
+        // https://dev.twitch.tv/docs/api/reference/#get-streams
+
+        var streamSearchUrl = "https://api.twitch.tv/helix/streams?" + new URLSearchParams({
+          game_id: nv.id,
+          type: "live",
+          first: "30"
+        }).toString();
+
+        fetch(streamSearchUrl, {
+          headers: {
+            "Authorization": "Bearer " + self.accessToken(),
+            "Client-Id": clientId
+          }
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          var results = data.data;
+          if(results){
+            processStreamResults(results);
+          }
+          else{
+            self.streamResults([]);
+          }
+        });
+      }
+      else{
+        self.streamResults([]);
+      }
+    })
   }
 
   function uuid() {
@@ -165,117 +435,7 @@
     else{
       focusedQuality = qualitySetting;
     }
-  }
-
-  function updateSearchVisibility(authed){
-    if(authed){
-      var disconnectedBox = document.getElementById("ct-search-auth-disconnected");
-      var connectedBox = document.getElementById("ct-search-auth-connected");
-      var controlsBox = document.getElementById("ct-search-controls");
-      disconnectedBox.classList.add("hidden");
-      connectedBox.classList.remove("hidden");
-      controlsBox.classList.remove("hidden");
-    }
-    else{
-      var disconnectedBox = document.getElementById("ct-search-auth-disconnected");
-      var connectedBox = document.getElementById("ct-search-auth-connected");
-      var controlsBox = document.getElementById("ct-search-controls");
-      disconnectedBox.classList.remove("hidden");
-      connectedBox.classList.add("hidden");
-      controlsBox.classList.add("hidden");
-    }
   }  
-
-  function setError(message){
-    var authErrorBox = document.getElementById("ct-search-errors");
-
-    if(message){      
-      authErrorBox.innerText = message;
-      authErrorBox.classList.remove("hidden");
-    }
-    else{
-      authErrorBox.innerText = "";
-      authErrorBox.classList.add("hidden");
-    }
-  }
-
-  function twitchAuthorize(){
-    var hash = location.hash;
-    if(hash.startsWith('#')){
-      hash = hash.substring(1);
-    }
-
-    var state = uuid();
-
-    localStorage.setItem(STREAMS_TEMP, hash);
-    localStorage.setItem(AUTH_STATE, state);
-
-    var authUrl = "https://id.twitch.tv/oauth2/authorize" +
-      "?response_type=token" +
-      "&client_id=" + clientId +
-      "&redirect_uri=" + (location.origin+location.pathname) +
-      "&scope=" +
-      "&state=" + state;
-    window.location.replace(authUrl);
-  }
-  
-  function startTokenValidation(){
-    // https://dev.twitch.tv/docs/authentication/validate-tokens/
-    const delay = 1000 * 60 * 60; // 1000 ms * 60 s * 60 m = every 1 hour
-
-    var callback = function(){
-      console.log("Validating access token");
-      if(accessToken){
-        fetch("https://id.twitch.tv/oauth2/validate", {
-          headers: {
-            "Authorization": "OAuth " + accessToken
-          }
-        })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log(data);
-          var invalidToken = data.status && data.status == "401";
-          var expiresSoon = data.expires_in && data.expires_in < delay;
-
-          if(invalidToken || expiresSoon){
-            if(invalidToken) accessToken = "";  // if token is actually expired now, clear it first so that the unauth method won't bother trying to revoke it
-
-            twitchUnauthorize();
-            setError("Access token has expired, connect with Twitch again to use search features");
-          }
-        });        
-      }
-      else{
-        // no access token..how are we here? stop the interval
-        clearInterval(accessTokenValidationInterval);
-      }
-    }
-
-    accessTokenValidationInterval = setInterval(callback, delay);
-    callback(); // first interval callback happens after the delay, need to also run once to start with
-  }
-
-  function twitchUnauthorize(){
-    if(accessToken){
-      // https://dev.twitch.tv/docs/authentication/revoke-tokens/
-      fetch("https://id.twitch.tv/oauth2/revoke", {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: new URLSearchParams({
-          'client_id': clientId,
-          'token': accessToken
-        })
-      });
-    }
-
-    accessToken = "";
-    localStorage.removeItem(AUTH_TOKEN);
-    if(accessTokenValidationInterval) clearInterval(accessTokenValidationInterval);    
-        
-    updateSearchVisibility(false);
-  }
 
   // figure out what's in the hash and handle it accordingly. could be an auth redirect, could be a list of streams
   // returns { streams:"", error:"", token:""}
@@ -359,11 +519,8 @@
     });
     if(players.length == 0) settingsSearchButton.click();
 
-    //auth/unauth buttons
-    var authButton = document.getElementById("ct-search-bauth");
-    authButton.addEventListener("click", twitchAuthorize);
-    var unauthButton = document.getElementById("ct-search-bunauth");
-    unauthButton.addEventListener("click", twitchUnauthorize);
+    // set up knockout for the search panel
+    ko.applyBindings(searchModel, searchPanel);
 
     // help
     var settingsHelpButton = document.getElementById("ct-settings-bhelp");
@@ -635,7 +792,7 @@
       }
     }
 
-    var playerHandler = function(e){
+    playerHandler = function(e){
       var player = this;
       var isolating = e && e.ctrlKey;
       var removing = e && e.shiftKey;
@@ -670,14 +827,8 @@
       }
     }
 
-    var playerButtonContainer = document.getElementById("ct-settings-playerbuttons");
     players.forEach(player => {
-      var button = document.createElement("button");
-      button.id = 'ct-playerbutton-' + player.id;
-      button.append(document.createTextNode(player.channelName));
-
-      button.addEventListener('click', playerHandler.bind(player), true);
-      playerButtonContainer.append(button);
+      player.makePlayerButton();
     });
 
     var lastFocus = localStorage.getItem(LAST_FOCUSED);
@@ -695,16 +846,16 @@
   }
 
   function init(){
+    searchModel = new SearchModel();
+
     // annoyingly, errors come back in the search, successes in the hash
     var hashOutcome = handleHash(location.search || location.hash);
 
     if(hashOutcome.error){
-      setError(hashOutcome.error);
+      searchModel.errorMessage(hashOutcome.error);
     }
     if(hashOutcome.token){
-      accessToken = hashOutcome.token;
-      startTokenValidation();
-      updateSearchVisibility(true);
+      searchModel.accessToken(hashOutcome.token);
     }
 
     var streamNames = hashOutcome.streams || "";

@@ -79,20 +79,46 @@
 	</div>
 
 	<div id="ct-search-panel" class="search hidden">
-		<div id="ct-search-errors" class="error hidden"></div>
-		<div id="ct-search-auth-disconnected" class="auth">		
-			<button id="ct-search-bauth">Authorize with Twitch</button>
+		<div id="ct-search-errors" style="display: none" class="error" data-bind="visible: errorMessage, text: errorMessage"></div>
+		<div id="ct-search-auth-disconnected" class="auth" data-bind="hidden: accessToken">		
+			<button id="ct-search-bauth" data-bind="click: twitchAuthorize">Authorize with Twitch</button>
 		</div>
-		<div id="ct-search-auth-connected" class="auth hidden">
+		<div id="ct-search-auth-connected" style="display: none" class="auth" data-bind="visible: accessToken">
 			<span>Connected with Twitch!</span>
-			<button id="ct-search-bunauth">Clear authorization</button>
+			<button id="ct-search-bunauth" data-bind="click: twitchUnauthorize">Clear authorization</button>
 		</div>
-		<div id="ct-search-controls" class="hidden">
-			actual search stuff goes here
+		<div id="ct-search-controls" style="display: none" class="search-controls" data-bind="visible: accessToken">
+			<div data-bind="hidden: category" class="search-container">
+				<input type="text" data-bind="textInput: categoryQuery" placeholder="Search categories" />
+				<div data-bind="foreach: categoryResults" class="results">
+					<div class="category" data-bind="click: $parent.category">
+						<img data-bind="attr: { src: box_art_url }" />
+						<span data-bind="text: name"></span>
+					</div>
+				</div>
+			</div>
+			<div data-bind="visible: category" class="search-container">
+				<div data-bind="with: category" class="category-label-container">
+					<button data-bind="click: $parent.clearCategory">&lt; Back</button>
+					<span data-bind="text: name"></span>
+				</div>
+				<input type="text" data-bind="textInput: streamQuery" placeholder="Search streams (first 30 only)" />
+				<div data-bind="foreach: filteredStreamResults" class="results">
+					<div class="stream" data-bind="click: $parent.addStream">
+						<img data-bind="attr: { src: iconUrl }" />
+						<div>
+							<strong data-bind="text: title"></strong>
+							<span data-bind="text: name"></span>
+							<span data-bind="text: viewerCount"></span>
+						</div>						
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 
-  <script src= "https://player.twitch.tv/js/embed/v1.js"></script>
-	<script src="Tools/Twitch/twitch.js"></script>
+	<script src= "https://player.twitch.tv/js/embed/v1.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js" integrity="sha512-2AL/VEauKkZqQU9BHgnv48OhXcJPx9vdzxN1JrKDVc4FPU/MEE/BZ6d9l0mP7VmvLsjtYwqiYQpDskK9dG8KBA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="Tools/Twitch/twitch.js"></script>	
 </body>
 </html>
