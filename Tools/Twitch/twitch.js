@@ -40,10 +40,19 @@
     self.playerContainerDiv = document.createElement("div");
     self.playerContainerDiv.classList.add("ct-player-container");
 
+    self.overlayDiv = document.createElement("div");
+    self.overlayDiv.classList.add("ct-player-overlay");
+    self.overlayDiv.classList.add("hidden");
+    self.playerContainerDiv.appendChild(self.overlayDiv);
+
+    var overlayText = document.createElement("span");
+    overlayText.appendChild(document.createTextNode(self.channelName));
+    self.overlayDiv.appendChild(overlayText);
+
     var playerDiv = document.createElement("div");
     playerDiv.id = self.elementId;
     playerDiv.classList.add("ct-player");
-    self.playerContainerDiv.appendChild(playerDiv);    
+    self.playerContainerDiv.appendChild(playerDiv);
 
     var container = document.getElementById("ct-player-container");
     container.appendChild(self.playerContainerDiv);
@@ -68,6 +77,15 @@
       }, {once: true});    
     }
 
+    self.setOverlay = function(visible, e){
+      if(visible){
+        self.overlayDiv.classList.remove("hidden");
+      }
+      else{
+        self.overlayDiv.classList.add("hidden");
+      }
+    }
+
     self.makePlayerButton = function(){
       var playerButtonContainer = document.getElementById("ct-settings-playerbuttons");
 
@@ -76,7 +94,12 @@
       button.append(document.createTextNode(self.channelName));
 
       button.addEventListener('click', playerHandler.bind(self), true);
+      button.addEventListener('mouseenter', self.setOverlay.bind(self, true));
+      button.addEventListener('mouseleave', self.setOverlay.bind(self, false));
       playerButtonContainer.append(button);
+
+      // this is just a convenient place to register this event, since it has to happen after playerHandler is actually defined
+      self.overlayDiv.addEventListener("click", playerHandler.bind(self), true);
     }
 
     self.setMuted = function(isMuted){
@@ -794,7 +817,7 @@
 
     playerHandler = function(e){
       var player = this;
-      var isolating = e && e.ctrlKey;
+      var isolating = e && e.ctrlKey && e.target.nodeName == "BUTTON";  // don't isolate when ctrl clicking the overlay
       var removing = e && e.shiftKey;
 
       var modeMatches = removing || (isolating && mode == "isolate") || (!isolating && mode == "focus");
@@ -843,6 +866,22 @@
     else{
       playerHandler.apply(players[0]);  // if they don't have one or it wasn't found, just focus the first
     }
+
+    // overlay keybinds
+    document.addEventListener("keydown", function(e){
+      if(e.keyCode == 17 && !e.repeat){
+        players.forEach(player => {
+          player.setOverlay(true);
+        })
+      }
+    });
+    document.addEventListener("keyup", function(e){
+      if(e.keyCode == 17 && !e.repeat){
+        players.forEach(player => {
+          player.setOverlay(false);
+        })
+      }
+    });
   }
 
   function init(){
