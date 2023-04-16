@@ -342,11 +342,15 @@ body {
 
 .ct-player-overlay span {
   color: white;
+  background-color: #272f2c;
+  padding: 10px;
+  font-family: verdana, sans-serif;
+  font-weight: bold;
 }
 
 @container (min-width: 50px){
   .ct-player-overlay span {
-    font-size: 8cqi;
+    font-size: 5cqi;
   }
 }
 
