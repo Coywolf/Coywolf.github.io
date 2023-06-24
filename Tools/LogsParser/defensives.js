@@ -78,26 +78,31 @@
 
 const ability_list = {
   "DeathKnight": {
-    Common: ["Icebound Fortitude","Anti-Magic Shell"],
-    "Blood": [],
+    Common: ["Icebound Fortitude","Anti-Magic Shell","Death Pact"],
+    "Blood": ["Rune Tap", "Dancing Rune Weapon", "Tombstone", "Vampiric Blood", "Bone Shield"],
     "Frost": [],
-    "Unholy": []
+    "Unholy": ["Lichborne"]
   },
   "DemonHunter": {
-    Common: [],
+    Common: ["Darkness"],
     "Havoc": ["Blur","Netherwalk"],
-    "Vengeance": []
+    "Vengeance": ["Fel Devastation", "Fiery Brand", "Demon Spikes", "Metamorphosis"]
   },
   "Druid": {
-    Common: ["Barkskin","Bear Form"],
-    "Balance": ["Renewal"],
-    "Feral": [],
-    "Guardian": [],
+    Common: ["Barkskin","Bear Form", "Renewal"],
+    "Balance": [],
+    "Feral": ["Survival Instincts"],
+    "Guardian": ["Survival Instincts", "Berserk", "Iron Fur", "Frenzied Regeneration"],
     "Restoration": ["Ironbark"]
+  },
+  "Evoker": {
+    Common: ["Obsidian Scales", "Renewing Blaze", "Zephyr"],
+    "Devastation": [],
+    "Preservation": []
   },
   "Hunter": {
     Common: ["Exhilaration","Aspect of the Turtle","Survival of the Fittest"],
-    "BeastMastery": [],
+    "BeastMastery": ["Fortitude of the Bear"],
     "Marksmanship": [],
     "Survival": []
   },
@@ -108,16 +113,16 @@ const ability_list = {
     "Frost": ["Ice Barrier"]
   },
   "Monk": {
-    Common: [],
-    "Brewmaster": [],
-    "Mistweaver": [],
-    "Windwalker": ["Fortifying Brew"]
+    Common: ["Fortifying Brew", "Dampen Harm", "Diffuse Magic"],
+    "Brewmaster": ["Purifying Brew", "Celestial Brew", "Zen Meditation", "Invoke Niuzao, the Black Ox", "Healing Elixir"],
+    "Mistweaver": ["Healing Elixir"],
+    "Windwalker": []
   },
   "Paladin": {
-    Common: ["Divine Shield"],
+    Common: ["Divine Shield", "Blessing of Protection"],
     "Holy": ["Divine Protection"],
-    "Protection": [],
-    "Retribution": ["Shield of Vengeance"]
+    "Protection": ["Shield of the Righteous", "Eye of Tyr", "Ardent Defender", "Guardian of Ancient Kings", "Sentinel"],
+    "Retribution": ["Shield of Vengeance", "Divine Protection"]
   },
   "Priest": {
     Common: ["Fade", "Desperate Prayer"],
@@ -132,7 +137,7 @@ const ability_list = {
     "Subtlety": []
   },
   "Shaman": {
-    Common: ["Astral Shift", "Earth Elemental"],
+    Common: ["Astral Shift", "Earth Shield"],
     "Elemental": [],
     "Enhancement": [],
     "Restoration": []
@@ -144,9 +149,9 @@ const ability_list = {
     "Destruction": []
   },
   "Warrior": {
-    Common: ["Spell Reflection"],
-    "Arms": ["Die by the Sword"],
+    Common: ["Spell Reflection", "Bitter Immunity", "Impending Victory", "Avatar"],
+    "Arms": ["Die by the Sword", "Ignore Pain"],
     "Fury": ["Enraged Regeneration"],
-    "Protection": []
+    "Protection": ["Demoralizing Shout", "Last Stand", "Shield Wall", "Ignore Pain", "Shield Block"]
   }
 }
