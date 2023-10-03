@@ -1,0 +1,39 @@
+body {
+  background-color: dimgrey;
+  display: flex;
+  justify-content: space-around;
+
+}
+
+.nonogram {
+  background-color: black;
+}
+
+.control-panel {
+background-color: lightsteelblue;
+border-color: black;
+border-style: solid;
+border-width: 2px;
+border-radius: 8px;
+font-family: helvetica;
+display: flex;
+justify-content: space-between;
+padding: 15px 10px;
+font-weight: 600;
+line-height: 2.2;
+}
+
+.endgame {
+color: darkblue;
+}
+
+.newgame{
+border-radius: 5px;
+padding: 8px;
+border-color: black;
+background-color: gainsboro;
+font-weight: 600;
+}
+.newgame:focus {
+outline: 0;
+}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-115047347-1"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'UA-115047347-1');
+	</script>
+
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="Games/Nonogram/nonogram.css"/>
+</head>	
+<body>
+	<div>
+		<canvas id="nonogram-canvas" class="nonogram"></canvas>
+		<div class="control-panel">
+			<div>
+				<label>Width:</label>
+				<input id="in_width" type="number" min="3" max="40"/>
+				<label>Height:</label>
+				<input id="in_height" type="number" min="3" max="20"/>
+				<label>Density:</label>
+				<input id="in_density" type="number" step=".05" min=".3" max=".7"/>
+			</div>
+      <span id="endgame" class="endgame"></span>
+			<button id="newgame" class="newgame">New Game</button>
+		</div>
+	</div>
+
+	<script src="Games/Nonogram/nonogram.js"></script>
+</body>
+</html>
