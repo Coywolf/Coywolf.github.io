@@ -9,10 +9,12 @@
       "type": "firefox",
       "request": "launch",
       "reAttach": true,
-      "file": "${workspaceFolder}/index.html",
+      "file": "${workspaceFolder}/coytactics.html",
       "reloadOnChange": {
         "watch": [ "${workspaceFolder}/**/*.js" ]
-      }
+      },
+      "profile": "dev",
+      "keepProfileChanges": true
     }
   ]
 }

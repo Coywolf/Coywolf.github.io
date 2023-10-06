@@ -1,0 +1,6 @@
+body {
+  background-color: dimgrey;
+  display: flex;
+  justify-content: space-around;
+
+}
