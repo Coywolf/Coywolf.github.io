@@ -14,8 +14,8 @@ save settings
     self.IsCrossed = false;
     self.IsMarked = false;
 		
-		self.LeftClick = function(){
-			if(self.IsMarked){
+		self.LeftClick = function(isDragging){
+			if(self.IsMarked && !isDragging){
         self.IsMarked = false;
       }
       else if(!self.IsCrossed){
@@ -23,8 +23,8 @@ save settings
       }
 		}
 		
-		self.RightClick = function(){
-			if(self.IsCrossed){
+		self.RightClick = function(isDragging){
+			if(self.IsCrossed && !isDragging){
         self.IsCrossed = false;
       }
       else if(!self.IsMarked){
@@ -72,6 +72,13 @@ save settings
   var hints = []; // list of lists. first width records are the x-dimension hints, drawn across the top, left to right. next height records are the y-dimension hints, drawn along the left, top to bottom
   var isGameOver = false;
 
+  var buttonDown = -1;  // -1 is no button, 0 is left click, 2 is right click
+  // start and end cell coordinates of the mouse, relative to the actual cell area
+  var mouseStartX = null;
+  var mouseStartY = null;
+  var lastDelta;  // the deltas from the last mousemove event. used to determine if the drag line needs to be redrawn
+  var dragLineWidth = .6; // percentage of cell size
+
   function drawDividers(){
     ctx.strokeStyle = "#6c94eb";
     ctx.lineWidth = 2;
@@ -93,15 +100,12 @@ save settings
     ctx.stroke();
   }
   
-  function drawCell(cell, skipDividers){
+  function drawCell(cell){
     var sx = 0;
     if(cell.IsCrossed) sx = 1;
     else if(cell.IsMarked) sx = 2;
 
     ctx.drawImage(imageObj, sx*spriteChunkSize, 0, spriteChunkSize, spriteChunkSize, cell.X*cellSize + cellsStartX, cell.Y*cellSize + cellsStartY, cellSize, cellSize);
-
-    // have to redraw the dividers each time a cell is drawn, since the new image might have just overlapped a line. skipped on the initial draw
-    if(!skipDividers) drawDividers(); 
   }
 
   function generateCells(){
@@ -272,6 +276,34 @@ save settings
 		
 		return true;
   }
+
+  function clamp(number, min, max){
+    return Math.min(Math.max(number, min), max);
+  }
+
+  function getCellCoordsFromMouse(x, y){
+    var rect = canvas.getBoundingClientRect();
+    var mouseX = Math.floor((x - rect.left - cellsStartX) / cellSize);
+    var mouseY = Math.floor((y - rect.top - cellsStartY) / cellSize);
+
+    return {
+      x: mouseX,
+      y: mouseY
+    };
+  }
+
+  // get the change in x and y, for click and drag
+  function getDeltaCoords(x, y){
+    var cellCoords = getCellCoordsFromMouse(x, y);
+    var deltaX = clamp(cellCoords.x, 0, width) - mouseStartX;
+    var deltaY = clamp(cellCoords.y, 0, height) - mouseStartY;
+
+    // determine which direction we're dragging. only orthogonal
+    if(Math.abs(deltaX) >= Math.abs(deltaY)) deltaY = 0;
+    else deltaX = 0;
+
+    return {deltaX, deltaY};
+  }
   
   // initialize inputs
   var widthInputElement = document.getElementById("in_width");
@@ -285,30 +317,122 @@ save settings
 		
 	imageObj.onload = function(){
 		newGame();
+
+    canvas.addEventListener('mousedown', function(evt){
+      if(isGameOver) return;
+      if(evt.button != 0 && evt.button != 2) return;  // ignore anything but left and right click
+      if(buttonDown >= 0) return; // if we're holding a button already, ignore any other mouse button
+
+      var cellCoords = getCellCoordsFromMouse(evt.clientX, evt.clientY);
+      if(cellCoords.x < 0 || cellCoords.y < 0) return;
+
+      buttonDown = evt.button;
+      mouseStartX = cellCoords.x;
+      mouseStartY = cellCoords.y;
+    });
 		
 		canvas.addEventListener('mouseup', function(evt){
 			if(isGameOver) return;
+      if(buttonDown != evt.button) return;  // if we're holding a button already, ignore any other mouse button
+      buttonDown = -1;
+      lastDelta = null;
 			
-			var rect = canvas.getBoundingClientRect();
-			var mouseX = Math.floor((evt.clientX - rect.left - cellsStartX) / cellSize);
-      var mouseY = Math.floor((evt.clientY - rect.top - cellsStartY) / cellSize);
-      
-      if(mouseX < 0 || mouseY < 0) return;
-			
-			var targetCell = cells[mouseX][mouseY];			
-			if(evt.button == 0){
-				targetCell.LeftClick(ctx, imageObj, cells);
-				
-				if(checkWin()){
-					endGame(true);
-				}
-			}
-			else if(evt.button == 2){
-				targetCell.RightClick(ctx, imageObj, cells);
+			var delta = getDeltaCoords(evt.clientX, evt.clientY);
+      var dirX = delta.deltaX < 0 ? -1 : 1;
+      var dirY = delta.deltaY < 0 ? -1 : 1;
+
+      var isDragging = delta.deltaX != 0 || delta.deltaY != 0;
+
+      for(var dx = 0; dx <= Math.abs(delta.deltaX); dx++){
+        for(var dy = 0; dy <= Math.abs(delta.deltaY); dy++){
+          var targetCell = cells[mouseStartX + (dx * dirX)][mouseStartY + (dy * dirY)];
+
+          if(evt.button == 0) targetCell.LeftClick(isDragging);
+          else targetCell.RightClick(isDragging);
+        }
       }
-      
-      drawCell(targetCell);
+
+      drawBoard();
+
+      if(evt.button == 0){
+        if(checkWin()){
+          endGame(true);
+        }
+      }
 		});
+
+    
+    canvas.addEventListener('mousemove', function(evt){
+      if(isGameOver) return;
+      if(buttonDown == -1) return;  // only drawing the drag line if we're holding a button
+
+      var delta = getDeltaCoords(evt.clientX, evt.clientY);
+      if(lastDelta && lastDelta.deltaX == delta.deltaX && lastDelta.deltaY == delta.deltaY) return; // the delta hasn't changed, so no need to redraw the line
+      lastDelta = delta;
+
+      drawBoard();
+
+      if(delta.deltaX == 0 && delta.deltaY == 0) return;  // delta is 0 both ways, no need to draw a line
+
+      ctx.strokeStyle = buttonDown == 2 ? "#a16868" : "#607491";
+      ctx.lineWidth = cellSize * dragLineWidth;
+
+      ctx.beginPath();
+      var startX = (mouseStartX * cellSize) + cellsStartX;
+      var startY = (mouseStartY * cellSize) + cellsStartY;
+      var endX = ((mouseStartX + delta.deltaX) * cellSize) + cellsStartX;
+      var endY = ((mouseStartY + delta.deltaY) * cellSize) + cellsStartY;
+      var textX, textY;
+
+      dragLineOffset = dragLineWidth + (dragLineWidth / 3);
+
+      if(delta.deltaX != 0){
+        startY += cellSize / 2;
+        endY += cellSize / 2;
+
+        if(delta.deltaX > 0){
+          startX += cellSize * (1-dragLineOffset);
+          endX += cellSize * dragLineOffset;
+        }
+        else{
+          startX += cellSize * dragLineOffset;
+          endX += cellSize * (1-dragLineOffset);
+        }
+
+        textX = startX + ((endX - startX) / 2);
+        textY = startY;
+      }
+      else{
+        startX += cellSize / 2;
+        endX += cellSize / 2;
+
+        if(delta.deltaY > 0){
+          startY += cellSize * (1-dragLineOffset);
+          endY += cellSize * dragLineOffset;
+        }
+        else{
+          startY += cellSize * dragLineOffset;
+          endY += cellSize * (1-dragLineOffset);
+        }
+
+        textX = startX;
+        textY = startY + ((endY - startY) / 2);
+      }
+
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "bold " + Math.trunc(cellSize * .4) + "px sans-serif";
+      ctx.fillText(Math.max(Math.abs(delta.deltaX), Math.abs(delta.deltaY)) + 1, textX, textY);
+    });
+
+    canvas.addEventListener('mouseleave', function(evt){
+      buttonDown = -1;
+    });
 	};
 	imageObj.src = "Games/Nonogram/n_sprite.png"
 	
