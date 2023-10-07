@@ -1,8 +1,3 @@
-/* todo
-click and drag for both clicks
-save settings
-*/
-
 (function() {
 	var CellModel = function(xInd, yInd){
 		var self = this;
@@ -47,6 +42,8 @@ save settings
 	canvas.oncontextmenu = function (e) {
 		e.preventDefault();
   };
+
+  const localStorageKey = "nonogram-settings";
   
   var canvasWidth = window.innerWidth * .85;
   var canvasHeight = window.innerHeight * .8;
@@ -79,11 +76,42 @@ save settings
   var lastDelta;  // the deltas from the last mousemove event. used to determine if the drag line needs to be redrawn
   var dragLineWidth = .6; // percentage of cell size
 
+  function saveSettings(){
+    var data = {
+      w: width,
+      h: height,
+      d: density
+    };
+
+    localStorage.setItem(localStorageKey, JSON.stringify(data));
+  }
+
+  function loadSettings(){
+    var storedString = localStorage.getItem(localStorageKey);
+
+    if(storedString){
+      var data = JSON.parse(storedString);
+
+      width = data.w;
+      height = data.h;
+      density = data.d;
+    }
+
+    var widthInputElement = document.getElementById("in_width");
+    widthInputElement.value = width;
+
+    var heightInputElement = document.getElementById("in_height");
+    heightInputElement.value = height;
+
+    var densityInputElement = document.getElementById("in_density");
+    densityInputElement.value = density;
+  }
+
   function drawDividers(){
     ctx.strokeStyle = "#6c94eb";
     ctx.lineWidth = 2;
-    var vertLineCount = Math.trunc(width / 5) - 1;
-    var horzLineCount = Math.trunc(height / 5) - 1;
+    var vertLineCount = Math.trunc(width / 5) - (width % 5 == 0 ? 1 : 0);
+    var horzLineCount = Math.trunc(height / 5) - (height % 5 == 0 ? 1 : 0);
 
     ctx.beginPath();
 
@@ -254,6 +282,7 @@ save settings
         
     generateCells();
     drawBoard();
+    saveSettings();
 
     isGameOver = false;
 	}			
@@ -305,17 +334,8 @@ save settings
     return {deltaX, deltaY};
   }
   
-  // initialize inputs
-  var widthInputElement = document.getElementById("in_width");
-  widthInputElement.value = width;
-
-  var heightInputElement = document.getElementById("in_height");
-  heightInputElement.value = height;
-
-  var densityInputElement = document.getElementById("in_density");
-  densityInputElement.value = density;
-		
-	imageObj.onload = function(){
+  loadSettings();		
+	imageObj.onload = function(){    
 		newGame();
 
     canvas.addEventListener('mousedown', function(evt){
