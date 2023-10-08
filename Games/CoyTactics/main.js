@@ -7,8 +7,8 @@ window.coytactics = {
 };
 
 class testObject extends gameObject{
-  mouseDown = false;
-  rightClick = false;
+  bitmaps;
+  offset = 0;
 
   constructor(){
     super();
@@ -16,39 +16,18 @@ class testObject extends gameObject{
     engine.addObject(this);
   }
 
-  draw(ctx){
-    if(this.rightClick){
-      if(this.mouseDown){
-        ctx.fillStyle = "#450852";
-      }
-      else{
-        ctx.fillStyle = "#c410e8";
-      }
-    }
-    else{
-      if(this.mouseDown){
-        ctx.fillStyle = "#0c451b";
-      }
-      else{
-        ctx.fillStyle = "#1fdb51";
-      }
+  async draw(ctx){
+    if(!this.bitmaps){
+      this.bitmaps = await engine.loadSpriteGrid("Games/Minesweeper/MS_Sprite.png", 32);
     }
 
-    ctx.fillRect(50,50,200,200);
+    for(var i = 0; i < this.bitmaps.length; i++){
+      ctx.drawImage(this.bitmaps[i], i*32, this.offset);
+    }
   }
 
   onInput_leftClick(x, y, isMouseDown){
-    this.mouseDown = isMouseDown;
-    this.rightClick = false;
-
-    return true;
-  }
-
-  onInput_rightClick(x, y, isMouseDown){
-    this.mouseDown = isMouseDown;
-    this.rightClick = true;
-
-    engine.removeObject(this);
+    this.offset += 32;
 
     return true;
   }
@@ -58,4 +37,4 @@ engine.init("coytactics-canvas");
 
 let testObj = new testObject();
 
-engine.draw();
+//engine.draw();

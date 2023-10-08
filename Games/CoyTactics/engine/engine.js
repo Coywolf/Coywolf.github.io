@@ -23,13 +23,16 @@ class CoyEngine {
     "rightClick": []
   }
 
-  #drawLayer(layer){
+  // all loaded images, keyed by their path
+  images = {};
+
+  async #drawLayer(layer){
     for(const subLayer of this.drawObjects[layer]){
       if(!subLayer) continue;
 
       for(const obj of subLayer){
         try{
-          obj.draw(this.ctx);
+          await obj.draw(this.ctx);
         }
         catch(e){
           console.error("Could not find draw method", e);
@@ -135,6 +138,16 @@ class CoyEngine {
     evt.stopPropagation();
   }
 
+  // returns a promise to load the image
+  #loadImage(path){
+    return new Promise((resolve, reject)=> {
+      let img = new Image()
+      img.onload = () => resolve(img)
+      img.onerror = reject
+      img.src = path
+    });
+  }
+
   init(canvasId){
     this.canvasElement = document.getElementById(canvasId);
     this.ctx = this.canvasElement.getContext("2d");
@@ -185,13 +198,46 @@ class CoyEngine {
     delete this.objects[obj.id];
   }
 
+  // if necessary, load an image. image cache will be used so the load only happens once. then return the full image object
+  // if image is a grid of sprites, just use loadSpriteGrid instead
+  // this method is if the whole image is needed or image contains custom sized and placed sprites
+  async loadImage(path){
+    let img = this.images[path];
+    if(!img){
+      img = await this.#loadImage(path);
+      this.images[path] = img;
+    }
+
+    return img;
+  }
+
+  // call loadImage
+  // then cut the image into sprites of width x [height] (assumed to be square if no height given)
+  // will only include a sprite if it's the full width x [height], so if the image is improperly sized the last row/column could be excluded
+  // returns the list of bitmaps, in order from left to right, top to bottom
+  // options are those passed into the createImageBitmap function
+  async loadSpriteGrid(path, width, height, options){
+    let img = await this.loadImage(path);
+    let spriteHeight = height || width;
+
+    let bitmaps = [];
+
+    for(var y = 0; y < Math.trunc(img.height / spriteHeight); y++){
+      for(var x = 0; x < Math.trunc(img.width / width); x++){
+        bitmaps.push(await createImageBitmap(img, x * width, y * spriteHeight, width, spriteHeight, options));
+      }
+    }
+
+    return bitmaps;
+  }
+
   // draw every object in order of layer->sublayer->add order
   draw(){
     this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
-    this.#drawLayer("background");
-    this.#drawLayer("foreground");
-    this.#drawLayer("interface");
+    this.#drawLayer("background")
+    .then(() => this.#drawLayer("foreground"))
+    .then(() => this.#drawLayer("interface"));
   }
 }
 
