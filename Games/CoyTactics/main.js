@@ -1,7 +1,15 @@
 import { engine } from "./engine/engine.js";
 import { gameObject } from "./engine/gameObject.js";
 
+// debugging
+window.coytactics = {
+  "engine": engine
+};
+
 class testObject extends gameObject{
+  mouseDown = false;
+  rightClick = false;
+
   constructor(){
     super();
     
@@ -9,29 +17,45 @@ class testObject extends gameObject{
   }
 
   draw(ctx){
-    ctx.fillStyle = "blue";
+    if(this.rightClick){
+      if(this.mouseDown){
+        ctx.fillStyle = "#450852";
+      }
+      else{
+        ctx.fillStyle = "#c410e8";
+      }
+    }
+    else{
+      if(this.mouseDown){
+        ctx.fillStyle = "#0c451b";
+      }
+      else{
+        ctx.fillStyle = "#1fdb51";
+      }
+    }
+
     ctx.fillRect(50,50,200,200);
   }
-}
 
-class testObject2 extends gameObject{
-  drawMainLayer = "background";
+  onInput_leftClick(x, y, isMouseDown){
+    this.mouseDown = isMouseDown;
+    this.rightClick = false;
 
-  constructor(){
-    super();
-
-    engine.addObject(this);
+    return true;
   }
 
-  draw(ctx){
-    ctx.fillStyle = "red";
-    ctx.fillRect(100,100,200,200);
+  onInput_rightClick(x, y, isMouseDown){
+    this.mouseDown = isMouseDown;
+    this.rightClick = true;
+
+    engine.removeObject(this);
+
+    return true;
   }
 }
 
 engine.init("coytactics-canvas");
 
 let testObj = new testObject();
-let testObj2 = new testObject2();
 
 engine.draw();
