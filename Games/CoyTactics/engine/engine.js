@@ -20,7 +20,9 @@ class CoyEngine {
   // all objects with an input handler
   inputObjects = {
     "leftClick": [],
-    "rightClick": []
+    "rightClick": [],
+    "wheel": [],
+    "mousemove": []
   }
 
   // all loaded images, keyed by their path
@@ -138,6 +140,40 @@ class CoyEngine {
     evt.stopPropagation();
   }
 
+  #handleInput_wheel(evt){
+    let x = evt.offsetX;
+    let y = evt.offsetY;
+    let isScrollUp = evt.deltaY < 0;
+
+    let redraw = false;
+
+    for(const obj of this.inputObjects["wheel"]){
+      redraw = obj["onInput_wheel"](x, y, isScrollUp) || redraw;
+    }
+
+    if(redraw){
+      this.draw();
+    }
+
+    evt.preventDefault();
+    evt.stopPropagation();
+  }
+
+  #handleInput_mousemove(evt){
+    let x = evt.offsetX;
+    let y = evt.offsetY;
+
+    let redraw = false;
+
+    for(const obj of this.inputObjects["mousemove"]){
+      redraw = obj["onInput_mousemove"](x, y) || redraw;
+    }
+
+    if(redraw){
+      this.draw();
+    }
+  }
+
   // returns a promise to load the image
   #loadImage(path){
     return new Promise((resolve, reject)=> {
@@ -155,11 +191,14 @@ class CoyEngine {
     this.canvasElement.width = this.canvasWidth;
     this.canvasElement.height = this.canvasHeight;
 
+    // input events
     this.canvasElement.addEventListener('mousedown', (evt) => { this.#handleInput_click(evt, true) });
     this.canvasElement.addEventListener('mouseup', (evt) => { this.#handleInput_click(evt, false) });
+    this.canvasElement.addEventListener('mousemove', (evt) => { this.#handleInput_mousemove(evt) });
+    this.canvasElement.addEventListener('wheel', (evt) => { this.#handleInput_wheel(evt) });
 
     // this is required to stop the context menu on firefox. other browsers might be different
-    this.canvasElement.addEventListener('contextmenu', (evt) => { evt.preventDefault(); });
+    document.addEventListener('contextmenu', (evt) => { evt.preventDefault(); });
   }
 
   // add an object, engine will start tracking it. register draw and input calls, all that

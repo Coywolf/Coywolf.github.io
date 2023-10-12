@@ -17,6 +17,8 @@ export class gameObject {
   // input events should return true if state has changed and so a redraw is required
   // onInput_leftClick(x, y, isButtonDown)
   // onInput_rightClick(x, y, isButtonDown)
+  // onInput_wheel(x, y, isScrollUp)
+  // onInput_mousemove(x, y)
 
   constructor(){    
     

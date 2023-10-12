@@ -1,5 +1,7 @@
 import { engine } from "./engine/engine.js";
 import { gameObject } from "./engine/gameObject.js";
+import { HexTests } from "./engine/hexGrid.js";
+import { Map } from "./game/map.js";
 
 // debugging
 window.coytactics = {
@@ -35,6 +37,9 @@ class testObject extends gameObject{
 
 engine.init("coytactics-canvas");
 
-let testObj = new testObject();
+//let testObj = new testObject();
+let map = new Map();
 
-//engine.draw();
+engine.draw();
+
+//HexTests.TestAll();
