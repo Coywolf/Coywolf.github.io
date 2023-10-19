@@ -4,3 +4,7 @@ body {
   justify-content: space-around;
 
 }
+
+canvas {
+  border: #5c1616 6px solid;
+}

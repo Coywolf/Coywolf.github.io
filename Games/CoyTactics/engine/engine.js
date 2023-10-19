@@ -1,8 +1,8 @@
 class CoyEngine {
   canvasElement;
   ctx;  // 2d context of the canvas
-  canvasWidth = 800;  // in pixels
-  canvasHeight = 600; // in pixels
+  canvasWidth = window.innerWidth * 0.8;  // in pixels. 80% of window width
+  canvasHeight = this.canvasWidth * 0.5625; // in pixels. 16:9 aspect ratio
 
   idCounter = 0;  // internal counter for game object IDs, each game object gets assigned the next one
 

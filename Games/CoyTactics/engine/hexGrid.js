@@ -52,6 +52,10 @@ export class Hex{
     return this.q + "," + this.r;
   }
 
+  get logString(){
+    return `[q=${this.q}, r=${this.r}, s=${this.s}]`;
+  }
+
   // construct a hex given two coordinates. s is optional and will be computed if not provided
   constructor(q, r, s){
     this.q = q;
@@ -150,6 +154,22 @@ export class Hex{
     return hex.neighbor(direction);
   }
 
+  // return all 6 neighbors of this hex
+  neighbors(){
+    let result = [];
+
+    for(var i = 0; i < 6; i++){
+      result.push(this.neighbor(i));
+    }
+
+    return result;
+  }
+
+  // static version of neighbors
+  static neighbors(hex){
+    return hex.neighbors();
+  }
+
   // return a hex vector representing the given diagonal direction
   // direction is modded. 0 is straight right for flat top, or top right for pointed top, goes CCW around
   static diagonal_vec(direction){
@@ -219,6 +239,49 @@ export class Hex{
   // static version of range
   static range(hex, n){
     return hex.range(n);
+  }
+
+  // return all of the hexes in an arc, centered around this hex
+  // direction is what the arc will be centered on. for even-width arcs, this is a diagonal vector. for odd-width arcs, a neighbor vector
+  // width is how many directions the arc will cover, inclusive, will be clamped to 1-7. a width of 7 will wrap back around to give a full ring, and in fact the ring call is just doing a 7 width arc
+  // range is how far out from this hex the arc will be
+  arc(direction, width, range){
+    let hexes = [];
+
+    let clampedWidth = Math.min(Math.max(width, 1), 7);
+
+    // subtract half the width from the direction, rounded down, to get the direction pointed to the rightmost end
+    // add back in 1 when the width is even to get it centered around a diagonal, which is always slightly more CCW than the adjacent vecs
+    let startDirection = direction - Math.floor(clampedWidth / 2) + 1 - (clampedWidth&1); 
+    
+    let hex = this.add(this.direction_vec(startDirection).multiply(range));
+    for(let i = startDirection + 2; i < startDirection + 1 + width; i++){
+      for(let j = 0; j < range; j++){
+        hexes.push(hex);
+        hex = hex.add(hex.direction_vec(i));        
+      }
+    }
+
+    // if not a full ring, push one more hex to make it inclusive of the ending direction
+    if(clampedWidth < 7) hexes.push(hex);
+
+    return hexes;
+  }
+
+  // static version of arc
+  static arc(hex, direction, width, range){
+    return hex.arc(direction, width, range);
+  }
+
+  // return all of the hexes in a ring around this hex, at the given range
+  // actually just using arc with a width of 7
+  ring(range){
+    return this.arc(0, 7, range);
+  }
+
+  // static version of ring
+  static ring(hex, range){
+    return hex.ring(range);
   }
   //#endregion
 }
@@ -322,7 +385,7 @@ export class HexLayout{
     0.5);
 
   #orientation;  // one of the two above static variables, determines if using pointy top or flat top
-  #size; // #size of the hexes, should be a Point
+  #size; // size of the hexes, should be a Point
   #origin; // where in pixels is the center of 0, 0, 0, should be a Point
 
   #corners; // precomputed relative corner positions. updated whenever the orientation or size changes
