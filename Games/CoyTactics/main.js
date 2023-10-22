@@ -1,6 +1,6 @@
 import { engine } from "./engine/engine.js";
 import { gameObject } from "./engine/gameObject.js";
-import { HexTests } from "./engine/hexGrid.js";
+import { PriorityQueueTests } from "./engine/priorityQueue.js";
 import { Map } from "./game/map.js";
 
 // debugging
@@ -42,4 +42,4 @@ let map = new Map();
 
 engine.draw();
 
-//HexTests.TestAll();
+//PriorityQueueTests.TestAll();

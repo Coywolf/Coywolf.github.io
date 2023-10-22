@@ -1,6 +1,7 @@
 import { engine } from "../engine/engine.js";
 import { gameObject } from "../engine/gameObject.js";
 import { HexLayout, Hex, Point, Offset} from "../engine/hexGrid.js";
+import { PriorityQueue } from "../engine/priorityQueue.js";
 
 // this class will have all of the properties held on a particular hex in the game. type of terrain, pointer to a unit, etc
 export class Tile {
@@ -13,6 +14,10 @@ export class Tile {
     this.hex = hex;
 
     this.type = 0;
+  }
+
+  getCost(){
+    return 1;
   }
 }
 
@@ -72,6 +77,11 @@ export class Map extends gameObject{
     return tile;
   }
 
+  // return true if the given hex has a tile in the map
+  contains(hex){
+    return this.tiles[hex.key];
+  }
+
   // return all hexes within range of startHex, but not going through blocked tiles
   floodRange(startHex, range){
     let visited = {}; // set of hexes, by key
@@ -94,6 +104,54 @@ export class Map extends gameObject{
     }
 
     return Object.values(visited);
+  }
+
+  // use A* to find a path from the startHex to the endHex, using the getCost function on Tile
+  // will return the full path including both ends, in the order of travel
+  findPath(startHex, endHex){
+    let frontier = new PriorityQueue((a, b) => a[1] < b[1]);  // lowest values have highest priority
+    let cameFrom = {};  // pointers from each hex to the hex it was reached from
+    let costTotal = {}; // lowest cost it's taken to reach a rex
+
+    frontier.push([startHex, 0]);
+    cameFrom[startHex.key] = null;
+    costTotal[startHex.key] = 0;
+
+    while(!frontier.isEmpty()){
+      let current = frontier.pop()[0];
+
+      if(current.equals(endHex)) break;
+
+      for(var next of current.neighbors()){
+        if(!this.contains(next) || this.tiles[next.key].isBlocked) continue;
+
+        let cost = costTotal[current.key] + this.tiles[next.key].getCost();
+        if(!(next.key in costTotal) || cost < costTotal[next.key]){
+          costTotal[next.key] = cost;
+          let priority = cost + next.distance(endHex);
+          frontier.push([next, priority]);
+          cameFrom[next.key] = current;
+        }
+      }
+    }
+
+    // if endHex is in cameFrom, that means we reached the goal
+    if(cameFrom[endHex.key]){
+      // now construct the path from start to end using the cameFrom pointers
+      let path = [];
+      let current = endHex;
+
+      while(current){
+        path.push(current);
+        current = cameFrom[current.key];
+      }
+
+      return path;
+    }
+    else{
+      // unable to find a path to the goal
+      return [];
+    }
   }
 
   onInput_leftClick(x, y, isButtonDown){
@@ -121,7 +179,7 @@ export class Map extends gameObject{
       // if didn't drag more than 5 pixels, can treat this as a click event
       if(Math.max(Math.abs(this.dragPoint.x - this.originalDragPoint.x), Math.abs(this.dragPoint.y - this.originalDragPoint.y)) < 5){
         let targetHex = this.hexLayout.pixelToHex(new Point(x, y)).round();
-        if(!this.tiles[targetHex.key].isBlocked) this.updateState(targetHex);
+        if(this.contains(targetHex) && !this.tiles[targetHex.key].isBlocked) this.updateState(targetHex);
 
         return true;
       }
@@ -197,29 +255,31 @@ export class Map extends gameObject{
     }
   }
 
-  updateState(centerHex){
+  updateState(newTarget){
+    if(newTarget){
+      this.lastTarget = this.target;
+      this.target = newTarget;
+    }
+
     // reset everything. everything marked (type 1) becomes unmarked (type 0)
     // if centerHex is given, also unset the center (type 2), then set it to the passed centerHex
     for(var tile of Object.values(this.tiles)){
-      if(tile.type == 1 || (centerHex && tile.type == 2)){
-        tile.type = 0;
-      }
+      tile.type = 0;
     }
-    if(centerHex){
-      this.tiles[centerHex.key].type = 2;
+
+    if(this.lastTarget){
+      this.tiles[this.lastTarget.key].type = 3;
+    }
+    if(this.target){
+      this.tiles[this.target.key].type = 2;
     }
 
     // then compute and set whatever thing i want to draw
-    let center = centerHex;
+    if(this.lastTarget && this.target){
+      let path = this.findPath(this.lastTarget, this.target);
 
-    if(!center){
-      let centerTile = Object.values(this.tiles).find(t => t.type == 2);
-      if(centerTile) center = centerTile.hex;
-    }
-
-    if(center){
-      for(var hex of this.floodRange(center, 4)){
-        if(!hex.equals(center)) this.tiles[hex.key].type = 1;
+      for(var hex of path){
+        if( !(hex.equals(this.lastTarget) || hex.equals(this.target)) ) this.tiles[hex.key].type = 1;
       }
     }
   }

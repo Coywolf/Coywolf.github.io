@@ -678,7 +678,7 @@ export class HexTests {
   }
 
   static TestAll(){
-    console.log("Running tests, fails are:");
+    console.log("Running HexTests, fails are:");
 
     HexTests.Equals();
     HexTests.Add();
@@ -701,6 +701,6 @@ export class HexTests {
     HexTests.OffsetFromHex();
     HexTests.OffsetToHex();
 
-    console.log("End of tests");
+    console.log("End of HexTests");
   }
 }
