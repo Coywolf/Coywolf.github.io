@@ -34,6 +34,8 @@ class CoyEngine {
 
       for(const obj of subLayer){
         try{
+          if(obj.isDisabled) continue;
+
           await obj.draw(this.ctx);
         }
         catch(e){
@@ -123,11 +125,15 @@ class CoyEngine {
 
     if(evt.button == 0){
       for(const obj of this.inputObjects["leftClick"]){
+        if(obj.isDisabled) continue;
+
         redraw = obj["onInput_leftClick"](x, y, isMouseDown) || redraw;
       }
     }
     else if(evt.button == 2){
       for(const obj of this.inputObjects["rightClick"]){
+        if(obj.isDisabled) continue;
+
         redraw = obj["onInput_rightClick"](x, y, isMouseDown) || redraw;
       }
     }
@@ -148,6 +154,8 @@ class CoyEngine {
     let redraw = false;
 
     for(const obj of this.inputObjects["wheel"]){
+      if(obj.isDisabled) continue;
+
       redraw = obj["onInput_wheel"](x, y, isScrollUp) || redraw;
     }
 
@@ -166,6 +174,8 @@ class CoyEngine {
     let redraw = false;
 
     for(const obj of this.inputObjects["mousemove"]){
+      if(obj.isDisabled) continue;
+      
       redraw = obj["onInput_mousemove"](x, y) || redraw;
     }
 

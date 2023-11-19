@@ -1,5 +1,5 @@
 import { engine } from "../engine/engine.js";
-import { gameObject } from "../engine/gameObject.js";
+import { GameObject } from "../engine/gameObject.js";
 import { HexLayout, Hex, Point, Offset} from "../engine/hexGrid.js";
 import { PriorityQueue } from "../engine/priorityQueue.js";
 
@@ -22,9 +22,8 @@ export class Tile {
 }
 
 // this will have the hashmap of all the tiles in the map. likely also terrain generation methods too
-export class Map extends gameObject{
+export class Map extends GameObject{
   hexLayout;
-
   // input-related variables
   zoom = 50;  // used as the size value
   zoomMin = 30;
@@ -40,7 +39,14 @@ export class Map extends gameObject{
   constructor(){
     super();
 
-    this.hexLayout = new HexLayout(HexLayout.flat, new Point(this.zoom, this.zoom), new Point(engine.canvasWidth / 2, engine.canvasHeight / 2));
+    // bounding box of the canvas area that the map tries to draw on. the map will draw out of the bounds so expected that the edges are covered up
+    // intended to be 4:3, full height, pulled right
+    this.width = engine.canvasHeight * 1.333;
+    this.height = engine.canvasHeight;
+    this.x = engine.canvasWidth - this.width;
+    this.y = 0; 
+
+    this.hexLayout = new HexLayout(HexLayout.flat, new Point(this.zoom, this.zoom), new Point(this.x + (this.width / 2), this.y + (this.height / 2)));
 
     let center = new Hex(0,0);    
     let hexes = center.range(8);
@@ -155,6 +161,7 @@ export class Map extends gameObject{
   }
 
   onInput_leftClick(x, y, isButtonDown){
+    if(!this.checkBounds(x, y)) return false;
     if(isButtonDown) return false;
 
     let targetHex = this.hexLayout.pixelToHex(new Point(x, y)).round();
@@ -169,6 +176,8 @@ export class Map extends gameObject{
   }
 
   onInput_rightClick(x, y, isButtonDown){
+    if(isButtonDown && !this.checkBounds(x, y)) return false;
+
     this.isDragging = isButtonDown;
     this.dragPoint = new Point(x, y);
 
@@ -234,8 +243,8 @@ export class Map extends gameObject{
   // based on the current size and offset, return the tiles that are actually even visible on the canvas. only these need to be drawn
   *getVisibleTiles(){
     // get the hex location of the top left and bottom right of the canvas, NOT ROUNDED, converted to offset which results in a fractional offset
-    let topLeftOffset = this.hexLayout.hexToOffset(this.hexLayout.pixelToHex(new Point(0, 0)));
-    let bottomRightOffset = this.hexLayout.hexToOffset(this.hexLayout.pixelToHex(new Point(engine.canvasWidth, engine.canvasHeight)));
+    let topLeftOffset = this.hexLayout.hexToOffset(this.hexLayout.pixelToHex(new Point(this.x, this.y)));
+    let bottomRightOffset = this.hexLayout.hexToOffset(this.hexLayout.pixelToHex(new Point(this.x + this.width, this.y + this.height)));
     
     // floor the start and ceiling the end should guarantee no gaps around the edge of the draw area
     // does technically overdraw a little depending on exact location and orientation but should be good enough
@@ -319,5 +328,10 @@ export class Map extends gameObject{
       ctx.fill();
       ctx.stroke();   
     }
+
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.x, this.height);
+    ctx.stroke();
   }
 }

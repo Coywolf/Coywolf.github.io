@@ -1,9 +1,10 @@
 import {engine} from "./engine.js";
 
-export class gameObject {
+export class GameObject {
   id; // unique identifier, it's assigned by the engine in addObject
   drawMainLayer = ""; // set this to "none" to not draw. Other options are "background", "foreground" (the default), "interface"
   drawSubLayer = 0; // finer control over the draw order, objects within a main layer are then ordered by sub layer, ascending
+  isDisabled = false; // if set to true, this object will be skipped over for both draw and input calls
 
   // basic position and size properties. should use these when applicable as common utility functions will make use of them
   x = 0;
