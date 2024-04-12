@@ -815,11 +815,8 @@
       }
     }
 
-    playerHandler = function(e){
-      var player = this;
-      var isolating = e && e.ctrlKey && e.target.nodeName == "BUTTON";  // don't isolate when ctrl clicking the overlay
-      var removing = e && e.shiftKey;
-
+    // does the actual work of modifying the player display. pulled out so that it can be called without clicking a player button, i.e. ctrl+# shortcut
+    playerHandlerWorker = function(player, isolating, removing){
       var modeMatches = removing || (isolating && mode == "isolate") || (!isolating && mode == "focus");
 
       if(focusedPlayer == player.id && modeMatches){
@@ -850,6 +847,15 @@
       }
     }
 
+    // called directly by events
+    playerHandler = function(e){
+      var player = this;
+      var isolating = e && e.ctrlKey && e.target.nodeName == "BUTTON";  // don't isolate when ctrl clicking the overlay
+      var removing = e && e.shiftKey;
+
+      playerHandlerWorker(player, isolating, removing);
+    }
+
     players.forEach(player => {
       player.makePlayerButton();
     });
@@ -869,18 +875,36 @@
 
     // overlay keybinds
     document.addEventListener("keydown", function(e){
-      if(e.keyCode == 17 && !e.repeat){
-        players.forEach(player => {
-          player.setOverlay(true);
-        })
+      if(!e.repeat){
+        if(e.key == 'Control'){
+          players.forEach(player => {
+            player.setOverlay(true);
+          })
+        }
+        else if(e.ctrlKey && (e.key == "1" || e.key == "2" || e.key == "3" || e.key == "4")){
+          let playerNumber = parseInt(e.key);
+
+          if(playerNumber <= players.length){
+            playerHandlerWorker(players[playerNumber-1], false, false);
+          }
+
+          e.preventDefault();
+        }
       }
     });
     document.addEventListener("keyup", function(e){
-      if(e.keyCode == 17 && !e.repeat){
-        players.forEach(player => {
-          player.setOverlay(false);
-        })
+      if(!e.repeat){
+        if(e.key == 'Control'){
+          players.forEach(player => {
+            player.setOverlay(false);
+          })
+        }
       }
+    });
+    document.addEventListener("blur", function(e){
+      players.forEach(player => {
+        player.setOverlay(false);
+      })
     });
   }
 
