@@ -46,7 +46,7 @@
     self.playerContainerDiv.appendChild(self.overlayDiv);
 
     var overlayText = document.createElement("span");
-    overlayText.appendChild(document.createTextNode(self.channelName));
+    overlayText.appendChild(document.createTextNode(`(${self.id}) ${self.channelName}`));
     self.overlayDiv.appendChild(overlayText);
 
     var playerDiv = document.createElement("div");
