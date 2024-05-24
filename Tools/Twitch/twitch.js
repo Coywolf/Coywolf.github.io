@@ -30,11 +30,12 @@
 
   var searchModel;
 
-  var PlayerModel = function(channel, index){
+  var PlayerModel = function(channel, id, index){
     var self = this;
 
     self.channelName = channel;
-    self.id = index;
+    self.id = id;
+    self.index = index;
     self.elementId = "ct-player-" + self.id; 
 
     self.playerContainerDiv = document.createElement("div");
@@ -46,7 +47,6 @@
     self.playerContainerDiv.appendChild(self.overlayDiv);
 
     var overlayText = document.createElement("span");
-    overlayText.appendChild(document.createTextNode(`(${self.id + 1}) ${self.channelName}`));
     self.overlayDiv.appendChild(overlayText);
 
     var playerDiv = document.createElement("div");
@@ -85,6 +85,15 @@
         self.overlayDiv.classList.add("hidden");
       }
     }
+
+    // for when players are removed
+    self.updateIndex = function(newIndex){
+      self.index = newIndex;
+
+      overlayText.innerHTML = '';
+      overlayText.appendChild(document.createTextNode(`(${self.index + 1}) ${self.channelName}`));
+    }
+    self.updateIndex(index);  // initialize
 
     self.makePlayerButton = function(){
       var playerButtonContainer = document.getElementById("ct-settings-playerbuttons");
@@ -312,7 +321,7 @@
     self.addStream = function(stream){
       if(players.length < 4){
         var newId = players.length > 0 ? Math.max(...players.map(p => p.id)) + 1 : 0;
-        var newPlayer = new PlayerModel(stream.name, newId);
+        var newPlayer = new PlayerModel(stream.name, newId, players.length);
         players.push(newPlayer);
         newPlayer.makePlayerButton();
 
@@ -787,7 +796,10 @@
         playerButton.remove();
         p.playerContainerDiv.remove();
         
-        players.splice(playerIndex, 1);        
+        players.splice(playerIndex, 1);
+        for(let i = 0; i < players.length; i++){
+          players[i].updateIndex(i); // to correct the channel overlay text
+        }
 
         var streams = parseStreamNames(location.hash);
         var streamsIndex = streams.findIndex(s => s == p.channelName);
@@ -926,7 +938,7 @@
     location.hash = streamNames;
     var streams = parseStreamNames(hashOutcome.streams || "");
     
-    players = streams.map((c, i) => new PlayerModel(c, i));
+    players = streams.map((c, i) => new PlayerModel(c, i, i));
     var container = document.getElementById("ct-player-container");
     container.classList.add("ct-playercount-" + players.length);
     
