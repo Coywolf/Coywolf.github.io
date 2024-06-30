@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-115047347-1"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'UA-115047347-1');
+	</script>
+
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="Tools/SmashStatTracker/smash_stat_tracker.css"/>
+	<title>Smash Stat Tracker</title>
+</head>	
+<body>
+	<div id="app"></div>
+
+	<!-- You can inline it in the file with syntax higlighting but you don't get the auto formatting that vs code does, so it's harder to work with -->
+	<!-- So i'm putting the longer templates here. Really short ones can just inline with the component -->
+
+	<!-- tracker.js -->
+	<template id="tracker">
+		<div> <!-- left column -->
+      <div> <!-- players -->
+        <div v-for="player in selectedPlayers" :key="player.id">
+          <span>{{player.id}} - </span>
+          <input v-model.lazy="player.name" />
+          <input v-model.lazy="player.character" />
+          <button type="button" @click="togglePlayerActive(player)">{{player.active ? "Active" : "Inactive"}}</button>
+          <button type="button" @click="removePlayer(player)">Remove</button>
+        </div>
+				<select v-model="addPlayerSelection">
+					<option value="">*New Player</option>
+					<option v-for="player in unselectedPlayers" :value="player.id">{{player.name}}</option>
+				</select>
+        <button type="button" @click="addPlayer">Add</button>
+      </div>
+      <div> <!-- custom event config -->
+        <div v-for="event in customEvents">
+          <input v-model.lazy="event.value" />
+					<button type="button" @click="triggerCustomEvent(event.value)">Trigger</button>
+					<button type="button" @click="removeCustomEvent(event.value)">Remove</button>
+        </div>
+        <input placeholder="New Event" v-model.lazy="newCustomEvent" />
+        <button type="button" @click="addCustomEvent">Add</button>
+      </div>
+    </div>
+    <div> <!-- right column -->
+      <div> <!-- map selection -->
+        <ul style="list-style-type: none;">
+          <li v-for="stage in stages">            
+            <label>
+              <input type="radio" v-model="selectedStage" :value="stage" />
+              {{stage}}
+            </label>
+          </li>
+        </ul>
+      </div>
+      <div> <!-- remaining stock grid -->
+        <table>
+        <thead>
+					<tr>						
+						<th v-for="player in activePlayers">{{player.name}}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="i in 3">
+						<td v-for="player in activePlayers">
+							<button type="button" @click="logGame(player, i)">{{i}} stocks</button>
+						</td>
+					</tr>
+				</tbody>
+        </table>
+      </div>
+      <div> <!-- session section -->
+        <div> <!-- session summary and controls -->
+					<div v-if="currentSession"><session-timer :start-time="currentSession.startTime" :end-time="currentSession.endTime" /></div>
+					<div></div>
+					<div>
+						<button type="button" v-if="showStartSession" @click="startSession">Start</button>
+						<button type="button" v-if="showResumeSession" @click="resumeSession">Resume</button>
+						<button type="button" v-if="showStopSession" @click="stopSession">Stop</button>
+					</div>
+        </div>
+        <div> <!-- event list -->
+					<ul>
+						<li v-for="event in sessionEvents">{{formatMs(event.time - currentSession.startTime)}} | <span v-html="formatSessionEvent(event)"></span></li>
+					</ul>
+        </div>
+      </div>
+    </div>
+	</template>
+
+	<script type="importmap">
+		{
+			"imports": {
+				"vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+			}
+		}
+	</script>
+	<script type="module" src="Tools/SmashStatTracker/app.js"></script>
+</body>
+</html>
