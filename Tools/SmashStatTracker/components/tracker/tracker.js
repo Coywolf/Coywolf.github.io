@@ -1,3 +1,10 @@
+// todo limit on selected players (4) and custom events (depends on keybinds but maybe 12)
+// todo keybinds
+// - thinking two modes - flat layout where there's a keybind for everything, as well as guided where it will activate different sections in order and use simpler keybinds for each
+// - probably need to consider how character change will work. Maybe that's just always up to mouse use, or maybe needs to do typeaheads or something
+// - for flat layout, thinking 1-4 toggles active on selected players, QWER,ASDF,ZXCV for stocks. TYU,GHJ,BNM for stages, IOP[] KL;' ,./ for custom events
+// - for guided, spacebar to start and continue from each section. first section is players, 1-4 for active, next section is stage, 1-9, next is winning player 1-4, next is remaining stocks 1-3
+
 import { ref } from 'vue';
 import SessionTimer from "./sessionTimer.js";
 import {Player, GamePlayer} from "../../models/player.js";
@@ -59,6 +66,7 @@ export default {
   },
   data(){
     return {
+      dataLoaded: false,
       allPlayers: [],
       addPlayerSelection: "",
       customEvents: [],
@@ -106,18 +114,27 @@ export default {
   watch: {
     allPlayers: {
       handler(){
-        // really bad to do it this way but just doing it for now. using a watch doesn't tell you the specific item that was updated, you just get the callback for the whole array
-        // need to split the player controls out into a separate component so those can handle the updates individually
-        for(var player of this.allPlayers){
-          DataStore.addOrUpdatePlayer(player);
+        if(this.dataLoaded){
+          // it feels pretty inefficient to just send the whole list on any update, but when this is all saving in local storage, that's how it has to save anyway
+          DataStore.updatePlayers(this.allPlayers);
         }
       },
       deep: true
     },
     customEvents: {
       handler(){
-        var unwrappedEvents = this.customEvents.map(e => e.value);
-        DataStore.updateCustomEvents(unwrappedEvents);
+        if(this.dataLoaded){
+          var unwrappedEvents = this.customEvents.map(e => e.value);
+          DataStore.updateCustomEvents(unwrappedEvents);
+        }
+      },
+      deep: true
+    },
+    currentSession: {
+      handler(newValue, oldValue){
+        if(this.dataLoaded){
+          DataStore.updateCurrentSession(this.currentSession, oldValue == null || newValue.startTime != oldValue.startTime);
+        }
       },
       deep: true
     }
@@ -125,6 +142,11 @@ export default {
   created(){
     this.allPlayers = DataStore.getPlayers();
     this.customEvents = DataStore.getCustomEvents().map(e => ref(e));
+    this.currentSession = DataStore.getCurrentSession();
+
+    this.$nextTick(() => {  // this ensures that all of the changes to reactive props above have propagated, and so have already triggered watchers
+      this.dataLoaded = true;
+    });
   },  
   methods:{
     toSnakeCase(str){
@@ -223,12 +245,12 @@ export default {
       return `${this.playerNames[gamePlayer.id]} (${gamePlayer.character})`;
     },
     formatSessionEvent(sessionEvent){
-      if(sessionEvent instanceof Game){
+      if(sessionEvent.winningPlayerId){
         const winningGamePlayer = sessionEvent.players.find(p => p.id == sessionEvent.winningPlayerId);
         const losingGamePlayers = sessionEvent.players.filter(p => p.id != sessionEvent.winningPlayerId);
         return `${this.formatGamePlayer(winningGamePlayer)} won over [${losingGamePlayers.map(p => this.formatGamePlayer(p)).join(', ')}] on ${sessionEvent.stage}, with ${sessionEvent.remainingStocks} stocks remaining`;
       }
-      else if(sessionEvent instanceof CustomEvent){
+      else if(sessionEvent.event){
         return `&ensp;${sessionEvent.event}`;
       }
 
