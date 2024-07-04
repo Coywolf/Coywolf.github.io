@@ -1,16 +1,124 @@
-// todo limit on selected players (4) and custom events (depends on keybinds but maybe 12)
-// todo keybinds
-// - thinking two modes - flat layout where there's a keybind for everything, as well as guided where it will activate different sections in order and use simpler keybinds for each
-// - probably need to consider how character change will work. Maybe that's just always up to mouse use, or maybe needs to do typeaheads or something
-// - for flat layout, thinking 1-4 toggles active on selected players, QWER,ASDF,ZXCV for stocks. TYU,GHJ,BNM for stages, IOP[] KL;' ,./ for custom events
-// - for guided, spacebar to start and continue from each section. first section is players, 1-4 for active, next section is stage, 1-9, next is winning player 1-4, next is remaining stocks 1-3
+// todo
+// character selection - this will probably switch to a component, need to be able to call a focus event on it
+// - kinda thinking it's sort of like a typeahead mixed with the character selection screen. on focus highlight the existing value, show the character map. 
+// - you can click on a character to select it, or start typing and it will highlight matching characters, as soon as there's only one match it selects it
+// window needs to respond to being in focus or not, border the page or something
+// highlight the active section in guided mode
+// keybind help. both a reference image for the all mode, and little keybind displays on all the controls, maybe only while holding ctrl or something
+// styling
+// stage images
 
 import { ref } from 'vue';
 import SessionTimer from "./sessionTimer.js";
-import {Player, GamePlayer} from "../../models/player.js";
+import {Player, GamePlayer} from "../../models/player.js"; 
 import DataStore from "../../dataStore.js";
 
 const sessionThresholdMinutes = 180;
+const maxPlayers = 4;
+const maxCustomEvents = 11;
+
+// holds all the keybind commands for each of the different keybind modes. commands are looked up and handled by the tracker onKeyup method
+// command keys are keyup event codes. commands are formatted as "command.argument.argument"
+const keyboardLayout = {
+  "all": {
+    "Digit1": "active.0",
+    "Digit2": "character.0",
+    "Digit3": "game.1.0",
+    "Digit4": "game.2.0",
+    "Digit5": "game.3.0",
+
+    "KeyQ": "active.1",
+    "KeyW": "character.1",
+    "KeyE": "game.1.1",
+    "KeyR": "game.2.1",
+    "KeyT": "game.3.1",
+
+    "KeyA": "active.2",
+    "KeyS": "character.2",
+    "KeyD": "game.1.2",
+    "KeyF": "game.2.2",
+    "KeyG": "game.3.2",
+
+    "KeyZ": "active.3",
+    "KeyX": "character.3",
+    "KeyC": "game.1.3",
+    "KeyV": "game.2.3",
+    "KeyB": "game.3.3",
+
+    "KeyY": "stage.0",
+    "KeyU": "stage.1",
+    "KeyI": "stage.2",
+    "KeyH": "stage.3",
+    "KeyJ": "stage.4",
+    "KeyK": "stage.5",
+    "KeyN": "stage.6",
+    "KeyM": "stage.7",
+    "Comma": "stage.8",
+
+    "Digit6": "event.0",
+    "Digit7": "event.1",
+    "Digit8": "event.2",
+    "Digit9": "event.3",
+    "Digit0": "event.4",
+    "Minus": "event.5",
+    "Equal": "event.6",
+    "KeyO": "event.7",
+    "KeyP": "event.8",
+    "BracketLeft": "event.9",
+    "BracketRight": "event.10",
+
+    "Space": "mode.player-active"
+  },
+  "player-active": {
+    "Digit1": "active.0",
+    "Digit2": "active.1",
+    "Digit3": "active.2",
+    "Digit4": "active.3",
+
+    "Space": "mode.player-character",
+    "Escape": "mode.all"
+  },
+  "player-character": {
+    "Digit1": "character.0",
+    "Digit2": "character.1",
+    "Digit3": "character.2",
+    "Digit4": "character.3",
+
+    "Space": "mode.stage",
+    "Escape": "mode.all"
+  },
+  "stage": {
+    "Digit1": "stage.0",
+    "Digit2": "stage.1",
+    "Digit3": "stage.2",
+    "Digit4": "stage.3",
+    "Digit5": "stage.4",
+    "Digit6": "stage.5",
+    "Digit7": "stage.6",
+    "Digit8": "stage.7",
+    "Digit9": "stage.8",
+
+    "Space": "mode.winner-player",
+    "Escape": "mode.all"
+  },
+  "winner-player": {
+    "Digit1": "winner.0",
+    "Digit2": "winner.1",
+    "Digit3": "winner.2",
+    "Digit4": "winner.3",
+
+    "Space": "mode.winner-stocks",
+    "Escape": "mode.all"
+  },
+  "winner-stocks": {
+    "Digit1": "stock.1",
+    "Digit2": "stock.2",
+    "Digit3": "stock.3",
+
+    "Space": "mode.log",
+    "Escape": "mode.all"
+  }
+}
 
 class SessionEvent {
   time;
@@ -67,13 +175,16 @@ export default {
   data(){
     return {
       dataLoaded: false,
+      keybindMode: "all", // all, player-active, player-character, stage, winner-player, winner-stocks. all uses the "flat mode" keybinds, everything else is number keys for that specific section
       allPlayers: [],
       addPlayerSelection: "",
       customEvents: [],
       newCustomEvent: "",
       stages: ["Battlefield", "Small Battlefield", "Final Destination", "Pokemon Stadium 2", "Smashville", "Town and City", "Kalos League", "Hollow Bastion", "Yoshi's Story"],
       selectedStage: 'Battlefield',
-      currentSession: null
+      currentSession: null,
+      winningPlayer: null, // the chosen winning player, only needed when using the guided keybind mode
+      remainingStocks: null // the chosen remaining stocks, only needed when using the guided keybind mode
     }
   },
   computed:{
@@ -87,9 +198,15 @@ export default {
     activePlayers(){
       return this.selectedPlayers.filter(p => p.active && p.name);
     },
+    hasMaxPlayers(){
+      return this.selectedPlayers.length >= maxPlayers;
+    },
     playerNames(){
       // convenience map of id to name
       return Object.fromEntries(this.allPlayers.map(p => [p.id, p.name]));
+    },
+    hasMaxCustomEvents(){
+      return this.customEvents.length >= maxCustomEvents;
     },
     showStartSession(){
       return !this.currentSession || this.currentSession.endTime
@@ -143,6 +260,8 @@ export default {
     this.allPlayers = DataStore.getPlayers();
     this.customEvents = DataStore.getCustomEvents().map(e => ref(e));
     this.currentSession = DataStore.getCurrentSession();
+
+    window.addEventListener('keyup', this.onKeyup);
 
     this.$nextTick(() => {  // this ensures that all of the changes to reactive props above have propagated, and so have already triggered watchers
       this.dataLoaded = true;
@@ -255,6 +374,70 @@ export default {
       }
 
       return "";
+    },
+    onKeyup(e){
+      var command = keyboardLayout[this.keybindMode][e.code];
+
+      if(command){
+        var commandTokens = command.split(".");
+
+        if(commandTokens[0] == "active"){
+          var player = this.selectedPlayers[commandTokens[1]];
+          if(player){
+            this.togglePlayerActive(player);
+          }
+        }
+        else if(commandTokens[0] == "character"){
+          var player = this.selectedPlayers[commandTokens[1]];
+          if(player){
+            console.log("character focus " + commandTokens[1]);
+          }
+        }
+        else if(commandTokens[0] == "stage"){
+          var stage = this.stages[commandTokens[1]];
+          if(stage){
+            this.selectedStage = stage;
+          }
+        }
+        else if(commandTokens[0] == "event"){
+          var customEvent = this.customEvents[commandTokens[1]];
+          if(customEvent){
+            this.triggerCustomEvent(customEvent);
+          }
+        }
+        else if(commandTokens[0] == "game"){
+          var player = this.selectedPlayers[commandTokens[2]];
+          if(player){
+            this.logGame(player, commandTokens[1]);
+          }
+        }
+        else if(commandTokens[0] == "winner"){
+          var player = this.selectedPlayers[commandTokens[1]];
+          if(player){
+            this.winningPlayer = player;
+          }
+        }
+        else if(commandTokens[0] == "stock"){
+          this.remainingStocks = commandTokens[1];
+        }
+        else if(commandTokens[0] == "mode"){
+          var newMode = commandTokens[1];
+          if(newMode == "log"){
+            // not a real mode but this is essentially the confirmation to log the game
+            if(this.winningPlayer && this.remainingStocks){              
+              this.logGame(this.winningPlayer, this.remainingStocks)
+            }
+            newMode = "all";
+          }
+
+          if(newMode == "all"){
+            this.winningPlayer = null;
+            this.remainingStocks = null;
+          }
+
+          this.keybindMode = newMode;
+        }
+      }
     }
   },
   template: '#tracker'

@@ -36,7 +36,7 @@
 					<option value="">*New Player</option>
 					<option v-for="player in unselectedPlayers" :value="player.id">{{player.name}}</option>
 				</select>
-        <button type="button" @click="addPlayer">Add</button>
+        <button type="button" @click="addPlayer" :disabled="hasMaxPlayers">Add</button>
       </div>
       <div> <!-- custom event config -->
         <div v-for="event in customEvents">
@@ -44,8 +44,8 @@
 					<button type="button" @click="triggerCustomEvent(event.value)">Trigger</button>
 					<button type="button" @click="removeCustomEvent(event.value)">Remove</button>
         </div>
-        <input placeholder="New Event" v-model.lazy="newCustomEvent" />
-        <button type="button" @click="addCustomEvent">Add</button>
+        <input placeholder="New Event" v-model.lazy="newCustomEvent" :disabled="hasMaxCustomEvents" />
+        <button type="button" @click="addCustomEvent" :disabled="hasMaxCustomEvents">Add</button>
       </div>
     </div>
     <div> <!-- right column -->
