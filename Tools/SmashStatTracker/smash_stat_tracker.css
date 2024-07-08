@@ -1,3 +1,63 @@
 body {
   background-color: dimgrey;
 }
+
+.tracker-container {
+  display: flex;
+}
+
+.side {
+  width: 30%;
+}
+
+.main {
+  width: 70%;
+}
+
+.column {
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.stage-selector {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stage-selector input { 
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.stage-selector input + img {
+  cursor: pointer;
+}
+
+.stage-selector input:checked + img {
+  box-sizing: border-box;
+  outline: 4px solid rgb(255, 217, 0);
+  outline-offset: -4px;
+}
+
+.stage-selector img {
+  max-width: 100%;
+  height: auto;  
+}
+
+.stage-selector label {
+  width: 20%;
+}
+
+.event-list {
+  width: 100%;
+  max-height: 400px;
+  overflow-y: scroll;
+}
+
+.session-summary {
+  display: flex;
+  justify-content: space-between;
+}

@@ -12,6 +12,7 @@ import { ref } from 'vue';
 import SessionTimer from "./sessionTimer.js";
 import {Player, GamePlayer} from "../../models/player.js"; 
 import DataStore from "../../dataStore.js";
+import StageSelector from "./stageSelector.js";
 
 const sessionThresholdMinutes = 180;
 const maxPlayers = 4;
@@ -170,7 +171,8 @@ class Session {
 
 export default {
   components:{
-    SessionTimer
+    SessionTimer,
+    StageSelector
   },
   data(){
     return {
@@ -180,7 +182,6 @@ export default {
       addPlayerSelection: "",
       customEvents: [],
       newCustomEvent: "",
-      stages: ["Battlefield", "Small Battlefield", "Final Destination", "Pokemon Stadium 2", "Smashville", "Town and City", "Kalos League", "Hollow Bastion", "Yoshi's Story"],
       selectedStage: 'Battlefield',
       currentSession: null,
       winningPlayer: null, // the chosen winning player, only needed when using the guided keybind mode
@@ -327,6 +328,8 @@ export default {
       this.currentSession.customEvents.push(customEvent);
     },
     logGame(winningPlayer, remainingStocks){
+      if(this.activePlayers.length < 2) return; // gotta have at least two players
+
       this.activateSessionIfNeeded();
       
       var activePlayers = this.activePlayers.map(p => new GamePlayer(p));
