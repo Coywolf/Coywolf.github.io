@@ -41,6 +41,7 @@ export default {
         <label v-for="stage in stages">
             <input type="radio" v-model="selectedStage" :value="stage.name"/>
             <img :src="stage.image"/>
+            <div class="titillium-web-semibold">{{stage.name}}</div>
         </label>
     </div>
     `

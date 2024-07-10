@@ -6,7 +6,6 @@
 // highlight the active section in guided mode
 // keybind help. both a reference image for the all mode, and little keybind displays on all the controls, maybe only while holding ctrl or something
 // styling
-// stage images
 
 import { ref } from 'vue';
 import SessionTimer from "./sessionTimer.js";
@@ -379,6 +378,8 @@ export default {
       return "";
     },
     onKeyup(e){
+      if (e.target.nodeName.toLowerCase() === 'input') { return; }  // ignore keybinds if typing in an input, e.g. player name
+      
       var command = keyboardLayout[this.keybindMode][e.code];
 
       if(command){

@@ -12,10 +12,16 @@
 	</script>
 
 	<meta charset="UTF-8">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700&display=swap" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" href="Tools/SmashStatTracker/font_styles.css"/>
 	<link rel="stylesheet" type="text/css" href="Tools/SmashStatTracker/smash_stat_tracker.css"/>
 	<title>Smash Stat Tracker</title>
 </head>	
-<body>
+<body class="titillium-web-regular">
 	<div id="app"></div>
 
 	<!-- You can inline it in the file with syntax higlighting but you don't get the auto formatting that vs code does, so it's harder to work with -->
@@ -25,33 +31,46 @@
 	<template id="tracker">
 	<div class="tracker-container">
 		<div class="side column"> <!-- left column -->
-			<div> <!-- players -->
-				<div v-for="player in selectedPlayers" :key="player.id">
-					<span>{{player.id}} - </span>
-					<input v-model.lazy="player.name" />
-					<input v-model.lazy="player.character" />
-					<button type="button" @click="togglePlayerActive(player)">{{player.active ? "Active" : "Inactive"}}</button>
-					<button type="button" @click="removePlayer(player)">Remove</button>
+			<div class="card"> <!-- players -->
+				<div class="player" v-for="(player, index) in selectedPlayers" :key="player.id">
+					<div class="player-header">
+						<span :class="{active: player.active}">Player #{{index+1}}</span>
+						<div>
+							<button class="btn btn-sm" type="button" @click="togglePlayerActive(player)" :class="{'btn-primary': player.active}">{{player.active ? "Active" : "Inactive"}}</button>
+							<button class="btn btn-sm btn-danger" type="button" @click="removePlayer(player)">Remove</button>
+						</div>
+					</div>					
+					<input class="text-input" v-model.lazy="player.name" />
+					<input class="text-input" v-model.lazy="player.character" />					
 				</div>
-				<select v-model="addPlayerSelection">
-					<option value="">*New Player</option>
-					<option v-for="player in unselectedPlayers" :value="player.id">{{player.name}}</option>
-				</select>
-				<button type="button" @click="addPlayer" :disabled="hasMaxPlayers">Add</button>
+				<div class="add-player-row">
+					<div class="select">
+						<select v-model="addPlayerSelection" :disabled="hasMaxPlayers">
+							<option value="">*New Player</option>
+							<option v-for="player in unselectedPlayers" :value="player.id">{{player.name}}</option>
+						</select>
+						<span class="focus"></span>
+					</div>
+					<button class="btn btn-sm btn-success" type="button" @click="addPlayer" :disabled="hasMaxPlayers">Add</button>
+				</div>
 			</div>
-			<div> <!-- custom event config -->
-				<div v-for="event in customEvents">
-					<input v-model.lazy="event.value" />
-					<button type="button" @click="triggerCustomEvent(event.value)">Trigger</button>
-					<button type="button" @click="removeCustomEvent(event.value)">Remove</button>
+			<div class="card"> <!-- custom event config -->
+				<div class="custom-event" v-for="event in customEvents">
+					<input class="text-input" v-model.lazy="event.value" />
+					<button class="btn btn-sm btn-primary" type="button" @click="triggerCustomEvent(event.value)">Trigger</button>
+					<button class="btn btn-sm btn-danger" type="button" @click="removeCustomEvent(event.value)">Remove</button>
 				</div>
-				<input placeholder="New Event" v-model.lazy="newCustomEvent" :disabled="hasMaxCustomEvents" />
-				<button type="button" @click="addCustomEvent" :disabled="hasMaxCustomEvents">Add</button>
+				<div class="custom-event">
+					<input class="text-input" placeholder="New Event" v-model.lazy="newCustomEvent" :disabled="hasMaxCustomEvents" />
+					<button class="btn btn-sm btn-success" type="button" @click="addCustomEvent" :disabled="hasMaxCustomEvents">Add</button>
+				</div>				
 			</div>
 		</div>
 		<div class="main column"> <!-- right column -->
-			<stage-selector v-model="selectedStage"></stage-selector>
-			<div> <!-- remaining stock grid -->
+			<div class="card">
+				<stage-selector v-model="selectedStage"></stage-selector>
+			</div>
+			<div class="card remaining-stocks"> <!-- remaining stock grid -->
 				<table>
 					<thead>
 						<tr>
@@ -61,13 +80,13 @@
 					<tbody>
 						<tr v-for="i in 3">
 							<td v-for="player in activePlayers">
-								<button type="button" @click="logGame(player, i)">{{i}} stocks</button>
+								<button class="btn btn-primary" type="button" @click="logGame(player, i)">{{i}} stock{{i > 1 ? "s" : ""}}</button>
 							</td>
 						</tr>
 					</tbody>
 				</table>
 			</div>
-			<div> <!-- session section -->
+			<div class="card"> <!-- session section -->
 				<div class="session-summary"> <!-- session summary and controls -->
 					<div v-if="currentSession">
 						<session-timer :start-time="currentSession.startTime" :end-time="currentSession.endTime"></session-timer>
@@ -75,9 +94,9 @@
 					<div v-if="currentSession">Games played: {{currentSession.games.length}}</div>
 					<div v-if="currentSession">Events Logged: {{currentSession.customEvents.length}}</div>
 					<div>
-						<button type="button" v-if="showStartSession" @click="startSession">Start</button>
-						<button type="button" v-if="showResumeSession" @click="resumeSession">Resume</button>
-						<button type="button" v-if="showStopSession" @click="stopSession">Stop</button>
+						<button class="btn btn-success" type="button" v-if="showStartSession" @click="startSession">Start</button>
+						<button class="btn btn-warning" type="button" v-if="showResumeSession" @click="resumeSession">Resume</button>
+						<button class="btn btn-danger" type="button" v-if="showStopSession" @click="stopSession">Stop</button>
 					</div>
 				</div>
 				<div class="event-list"> <!-- event list -->
