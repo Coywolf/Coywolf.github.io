@@ -12,6 +12,7 @@ import SessionTimer from "./sessionTimer.js";
 import {Player, GamePlayer} from "../../models/player.js"; 
 import DataStore from "../../dataStore.js";
 import StageSelector from "./stageSelector.js";
+import CharacterPicker from "./characterPicker.js";
 
 const sessionThresholdMinutes = 180;
 const maxPlayers = 4;
@@ -171,7 +172,8 @@ class Session {
 export default {
   components:{
     SessionTimer,
-    StageSelector
+    StageSelector,
+    CharacterPicker
   },
   data(){
     return {
@@ -394,7 +396,7 @@ export default {
         else if(commandTokens[0] == "character"){
           var player = this.selectedPlayers[commandTokens[1]];
           if(player){
-            console.log("character focus " + commandTokens[1]);
+            this.$refs.characterPickers[commandTokens[1]].focus();
           }
         }
         else if(commandTokens[0] == "stage"){

@@ -41,7 +41,7 @@
 						</div>
 					</div>					
 					<input class="text-input" v-model.lazy="player.name" />
-					<input class="text-input" v-model.lazy="player.character" />					
+					<character-picker v-model="player.character" ref="characterPickers" />
 				</div>
 				<div class="add-player-row">
 					<div class="select">

@@ -282,3 +282,10 @@ select:focus + .focus {
   border: 2px solid var(--select-focus);
   border-radius: 4px;
 }
+
+.roster {
+  background-color: var(--dark-accent);
+  padding: 10px;
+  position: absolute;
+  z-index: 10;
+}
