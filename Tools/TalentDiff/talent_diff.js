@@ -157,25 +157,31 @@ WH.setPageData("specs", {
       let nodes = [];
       while (self.valueIndex < self.values.length) {
         let isNodeSelected = self.extractValue(1) === 1;
+        let isPurchased = false;
         let isPartiallyRanked = false;
         let ranksPurchased = 0;
         let isChoiceNode = false;
         let choiceEntryIndex = 0;
 
         if (isNodeSelected) {
-          isPartiallyRanked = self.extractValue(1) === 1;
-          if (isPartiallyRanked) {
-            ranksPurchased = self.extractValue(6);
-          }
+          isPurchased = self.extractValue(1) === 1;
 
-          isChoiceNode = self.extractValue(1) === 1;
-          if (isChoiceNode) {
-            choiceEntryIndex = self.extractValue(2);
+          if(isPurchased){
+            isPartiallyRanked = self.extractValue(1) === 1;
+            if (isPartiallyRanked) {
+              ranksPurchased = self.extractValue(6);
+            }
+
+            isChoiceNode = self.extractValue(1) === 1;
+            if (isChoiceNode) {
+              choiceEntryIndex = self.extractValue(2);
+            }
           }
         }
 
         nodes.push({
           isNodeSelected: isNodeSelected,
+          isPurchased: isPurchased,
           isPartiallyRanked: isPartiallyRanked,
           partialRanksPurchased: ranksPurchased,
           isChoiceNode: isChoiceNode,
@@ -184,9 +190,9 @@ WH.setPageData("specs", {
       }
 
       // tie in the wowhead data to get the cell corresponding to each node
-      let dataNodes = WH["wow.talentCalcDragonflight.live.nodes"][self.specRecord.classId];
+      let dataNodes = WH["wow.talentCalcDragonflight.live.nodes"][self.specRecord.classId].nodes;
       let nodeMap = self.getNodeMap(self.specRecord.classId, self.specId);
-
+      
       for(let i = 0; i < nodes.length; i++){
         let node = nodes[i];
 
